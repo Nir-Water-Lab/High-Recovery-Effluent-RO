@@ -96,7 +96,11 @@ def WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,
     Ps= Ps0*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
 
-    first_stage = len(r) / 2
+    first_stage = len(r) * 0.50 / 0.99 
+    second_stage = len(r) * (0.80 - 0.50) / 0.99
+    third_stage = len(r) * (0.925 - 0.80) / 0.99
+    fourth_stage = len(r) * (0.975 - 0.925) / 0.99
+    fifth_stage = len(r) * (0.99 - 0.975) / 0.99
 
     #calculates pressure in Bar, 
     for i in range(len(r)):
