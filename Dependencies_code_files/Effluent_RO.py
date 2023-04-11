@@ -109,6 +109,21 @@ def WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,
         else:
             Pbar[i] = P_feed - pressure_drop * (r[i] / r[-1])
         #Pbar[i] = P_feed - pressure_drop * (r[i] / r[len(r) - 1])   #*calculates the ratio of the current recovery value r[i] to the maximum recovery value r[len(r) - 1], scale pressure drop
+
+        # Define the pressure components for each stage
+    pressure_components = [5, 7, 9, 11]    
+    for i in range(len(r)):
+        if i < first_stage:
+            Pbar[i] = P_feed - pressure_drop * (r[i] / r[-1])
+        elif i < second_stage:
+            Pbar[i] = P_feed + pressure_components[0] - pressure_drop * (r[i] / r[-1])
+        elif i < third_stage:
+            Pbar[i] = P_feed + pressure_components[1] - pressure_drop * (r[i] / r[-1])
+        elif i < fourth_stage:
+            Pbar[i] = P_feed + pressure_components[2] - pressure_drop * (r[i] / r[-1])
+        else:
+            Pbar[i] = P_feed + pressure_components[3] - pressure_drop * (r[i] / r[-1])
+
         PHI = 1.0
         """mass transfer coefficient"""
         k[i] = ks
