@@ -1,10 +1,10 @@
 import os
 import numpy as np
-from Water_Salt_Transport import WATRO
+from Effluent_RO import WATRO
 
 """Enter major ions concentrations in mol/l"""
-Cl=0.567125511; SO4=0.033763917; Na=0.497273368; Mg=0.052867719
-K=0.011085392; Ca=0.010279573; Sr=0.0000776; Br=0.0
+Ca = 0.001;	P = 0.00007;	K = 0.00060;	
+Mg = 0.00035; Na = 0.00593;	S = 0.00089; Cl = 0.00593
 
 """Enter acid-base parameters"""
 """
@@ -26,10 +26,10 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 46.2 #Enter Pressure (bars) 
+P_feed = 56.0 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 u0 = 0.17 #Enter feed cross-flow velocity (m/s)
-recovery = 52.0 #Enter Recovey Ratio (%)
+recovery = 85.0 #Enter Recovey Ratio (%)
 pressure_drop = 0.3 #Enter total pressure drop (bars)
 
 """Enter Membrane Constants at 25C. If unavailable enter 0 and it will be estimated by the software according to membrane manufacturer performance report"""
@@ -41,9 +41,9 @@ Pb0 : B(OH)3 permeability (float)
 ks : Average mass transfer for charged solutes (float)
 kb : Average mass transfer for uncharged (float)
 """
-Pw0 = 5.793e-7 #1.084e-6 #Enter water permeabiliy (if unavailable enter 0 - value will be derived from manufacturer data)
-Ps0 = 1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
-ks = 2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
+Pw0 = 12.65e-7 #1.084e-6 #5.793e-7 #1.084e-6 #Enter water permeabiliy (if unavailable enter 0 - value will be derived from manufacturer data)
+Ps0 = 9.404e-8 #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
+ks = 2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
 #Pb0 = 1.875e-6 #2.78e-5 #Enter B(OH)3 permeabiliy (if unavailable enter 0)
 #kb = 1.0e-3 #1.62e-5 #Enter average mass transfer coefficient for unchraged solutes (if unavailable enter 0)
  
@@ -70,10 +70,12 @@ Rej_NaCl = 99.5 #Enter NaCl rejection at standard test conditions (%)
 Rej_B = 83.0 # Enter B rejection at standard test conditions (%)
 d_mil = 28.0 #enter feed spacer height (mil)
 
+
 """Run the program by pressing F5"""
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar)=WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
+(r,Jw,Cb,Cp,Cm,Pbar)=WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,
+                                                                     Pw0,Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
 
 
 import xlsxwriter
@@ -82,7 +84,7 @@ folder_name = 'Wastewater_Effluent_Filtration'
 # Check if the folder exists, create it if it doesn't
 if not os.path.exists(folder_name):
     os.makedirs(folder_name)
-folder_path = r'C:\Users\Mangu\Desktop\Nir Water Lab\WATRO\Wastewater_Effluent_Filtration'  # replace with your desired path
+folder_path = r'C:\Users\Mangu\Desktop\Nir Water Lab\High-Recovery-Effluent-RO\Wastewater_Effluent_Filtration'  # replace with your desired path
 os.makedirs(folder_path, exist_ok=True)
 
 # define filename and check for existing files with the same name
