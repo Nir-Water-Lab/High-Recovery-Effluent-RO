@@ -26,10 +26,10 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 56.0 #Enter Pressure (bars) 
+P_feed = 15.0 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 u0 = 0.17 #Enter feed cross-flow velocity (m/s)
-recovery = 85.0 #Enter Recovey Ratio (%)
+recovery = 99.0 #Enter Recovey Ratio (%)
 pressure_drop = 0.3 #Enter total pressure drop (bars)
 
 """Enter Membrane Constants at 25C. If unavailable enter 0 and it will be estimated by the software according to membrane manufacturer performance report"""
@@ -74,8 +74,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 """Run the program by pressing F5"""
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar)=WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,
-                                                                     Pw0,Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
+(r,Jw,Cb,Cp,Cm,Pbar)=WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
 
 
 import xlsxwriter

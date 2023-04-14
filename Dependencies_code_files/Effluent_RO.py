@@ -1,4 +1,4 @@
-def WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop):
+def WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop):
     
     # Import standard library modules first.
     #import os
@@ -65,8 +65,9 @@ def WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,
     S = np.zeros(len(r))
     Cb = np.zeros(len(r))
 
-    S0 = (Cl * 35.453 + Na * 22.98977 + SO4 * 96.0626 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + Br * 79.904 + Sr * 87.62 + Bt_feed/1000)
-    Cb[0] = (Cl + Na + SO4 + Mg + Ca + K + Br + Sr + Bt_feed/10811)
+    S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098)
+    Cb[0] = (Cl + Na + Mg + Ca + K)
+    
     Cp = np.zeros(len(r))
     Cm = np.zeros(len(r))
     k = np.zeros(len(r))
@@ -95,36 +96,28 @@ def WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,
     Pw= Pw0*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
     Ps= Ps0*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
+    first_stage = len(r) * 0.495 / 0.99 
+    second_stage = len(r) * (0.79) / 0.99
+    third_stage = len(r) * (0.91) / 0.99
+    fourth_stage = len(r) * (0.96) / 0.99
+    fifth_stage = len(r) * (0.98) / 0.99
 
-    first_stage = len(r) * 0.50 / 0.99 
-    second_stage = len(r) * (0.80 - 0.50) / 0.99
-    third_stage = len(r) * (0.925 - 0.80) / 0.99
-    fourth_stage = len(r) * (0.975 - 0.925) / 0.99
-    fifth_stage = len(r) * (0.99 - 0.975) / 0.99
 
-    #calculates pressure in Bar, 
-
-        # Define the pressure components for each stage
-    
+    pressure_boost = [3, 5, 7, 9]
     for i in range(len(r)):
-        #if i >= first_stage:
-            #Pbar[i] = P_feed + 10 - pressure_drop * (r[i] / r[-1])
-        #else:
-            #Pbar[i] = P_feed - pressure_drop * (r[i] / r[-1])
-        Pbar[i] = P_feed - pressure_drop * (r[i] / r[len(r) - 1])      
-    #pressure_boost = [5, 7, 9, 11]    
-    #for i in range(len(r)):
-        #if i < first_stage:
-            #Pbar[i] = P_feed - pressure_drop * (r[i] / r[-1])       #*calculates the ratio of the current recovery value r[i] to the maximum recovery value r[len(r) - 1], scale pressure drop
-        #elif i < second_stage:
-            #Pbar[i] = P_feed + pressure_boost[0] - pressure_drop * (r[i] / r[-1])
-        #elif i < third_stage:
-            #Pbar[i] = P_feed + pressure_boost[1] - pressure_drop * (r[i] / r[-1])
-        #elif i < fourth_stage:
-            #Pbar[i] = P_feed + pressure_boost[2] - pressure_drop * (r[i] / r[-1])
-        #else:
-            #Pbar[i] = P_feed + pressure_boost[3] - pressure_drop * (r[i] / r[-1])
+        if i <= first_stage:
+            Pbar[i] = P_feed - pressure_drop * (r[i] / r[-1])
+        elif first_stage < i <= second_stage:
+            Pbar[i] = P_feed + pressure_boost[0] - pressure_drop * (r[i] / r[-1])
+        elif second_stage < i <= third_stage:
+            Pbar[i] = P_feed + pressure_boost[1] - pressure_drop * (r[i] / r[-1])
+        elif third_stage < i <= fourth_stage:
+            Pbar[i] = P_feed + pressure_boost[2] - pressure_drop * (r[i] / r[-1])
+        else:
+            Pbar[i] = P_feed + pressure_boost[3] - pressure_drop * (r[i] / r[-1])
 
+
+    
         PHI = 1.0
         """mass transfer coefficient"""
         k[i] = ks
@@ -134,14 +127,11 @@ def WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,
                 units     mol/l
                 temp     %f
                 pH       %f
-                Cl       %e
-                S(6)     %e
-                Br       %e   
+                Cl       %e   
                 Na       %e
                 Mg       %e
                 K        %e
                 Ca       %e
-                Sr       %e
                 USE solution 1
                 REACTION_PRESSURE 1
                 %f
@@ -154,7 +144,7 @@ def WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,
                 SELECTED_OUTPUT
                 -reset          false
                 -user_punch     true
-                END"""%(t,7,Cl/(1-r[i]),SO4/(1-r[i]),Br/(1-r[i]),Na/(1-r[i]),Mg/(1-r[i]),K/(1-r[i]),Ca/(1-r[i]),Sr/(1-r[i]),Pbar[i])
+                END"""%(t,7,Cl/(1-r[i]),Na/(1-r[i]),Mg/(1-r[i]),K/(1-r[i]),Ca/(1-r[i]),Pbar[i])
             sol_rho = phreecalc(RHO_PHREE)
             #print(sol_rho)
             rho = 1000*sol_rho[2][0]
@@ -175,14 +165,11 @@ def WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,
                 units      mol/l
                 temp       %f
                 pH         %f
-                Cl         %e 
-                S(6)       %e 
-                Br         %e  
+                Cl         %e   
                 Na         %e 
                 Mg         %e 
                 K          %e 
-                Ca         %e 
-                Sr         %e              
+                Ca         %e               
                 USE solution 1            
                 USER_PUNCH
                 -headings osmotic_coefficient
@@ -193,13 +180,14 @@ def WATRO(Cl,SO4,Na,Mg,K,Ca,Sr,Br,Bt_feed,P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,
                 SELECTED_OUTPUT
                 -reset                false
                 -user_punch           true
-                 END"""%(t,7,Cl*CF[i],SO4*CF[i],Br*CF[i],Na*CF[i],Mg*CF[i],K*CF[i],Ca*CF[i],Sr*CF[i])
+                 END"""%(t,7,Cl*CF[i],Na*CF[i],Mg*CF[i],K*CF[i],Ca*CF[i])
             sol_osm=phreecalc(osmo_phree)
             #print(sol_osm)
             PHI = sol_osm[1][0] 
             rho = sol_osm[1][1]
 
-            Jw[i] = optimize.bisect(func, 1e-8 ,1e-4 , xtol = 1e-17, rtol = 5e-15, maxiter = 500)   #uses the fuct fucntion to find JW, leveraging Scipy lib
+            Jw[i] = optimize.bisect(func, 1e-8 ,1e-4 , xtol = 1e-17, rtol = 5e-15, maxiter = 500)   #uses the bisection method to find Jw within the boundary conditions
+            #print(Jw)
             Cp[i] = (Cb[i]*Ps*exp(Jw[i]/k[i]))/(Jw[i]+Ps*exp(Jw[i]/k[i]))           #SD model
             Cm[i] = Cp[i] +(Cb[i]-Cp[i])*exp(Jw[i]/k[i])    # mass balance, film theory
             CF[i] = Cm[i]/Cb[0]       #concentration ploarization factor (CF) for the i-th stage of the reverse osmosis process            
