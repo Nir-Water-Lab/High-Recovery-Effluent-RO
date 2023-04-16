@@ -44,8 +44,24 @@ kb : Average mass transfer for uncharged (float)
 Pw0 = 12.65e-7 #1.084e-6 #5.793e-7 #1.084e-6 #Enter water permeabiliy (if unavailable enter 0 - value will be derived from manufacturer data)
 Ps0 = 9.404e-8 #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
 ks = 2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
-#Pb0 = 1.875e-6 #2.78e-5 #Enter B(OH)3 permeabiliy (if unavailable enter 0)
-#kb = 1.0e-3 #1.62e-5 #Enter average mass transfer coefficient for unchraged solutes (if unavailable enter 0)
+Pw1, Ps1 = 10.65e-7, 7.404e-8
+Pw2, Ps2 = 8.65e-7,5.404e-8
+Pw3, Ps3 = 6.65e-7, 3.404e-8
+Pw4, Ps4 = 4.65e-7, 1.404e-8
+
+# """Number of Steps in the Process"""
+# step_num = int(recovery + 1)
+# r_f = recovery/100.0
+# r = np.linspace(0, r_f, step_num) 
+
+
+# first_stage = len(r) * 0.495 / 0.99 
+# second_stage = len(r) * (0.79) / 0.99
+# third_stage = len(r) * (0.91) / 0.99
+# fourth_stage = len(r) * (0.96) / 0.99
+# fifth_stage = len(r) * (0.98) / 0.99
+
+
  
 """Enter manufacturer results from standard test conditions for estimating missing membrane constants"""
 """
@@ -74,7 +90,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 """Run the program by pressing F5"""
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar)=WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
+(r,Jw,Cb,Cp,Cm,Pbar)=WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
 
 
 import xlsxwriter
