@@ -1,4 +1,4 @@
-def WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop):
+def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_feed,t,u0,visco,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop):
     
     # Import standard library modules first.
     #import os
@@ -24,17 +24,7 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,
     
     def visco(T, S):
         S = S / 1000
-        a1 = 1.5700386464E-01
-        a2 = 6.4992620050E+01
-        a3 = -9.1296496657E+01
-        a4 = 4.2844324477E-05
         mu_w = a4 + 1 / (a1 * (T + a2) ** 2 + a3)
-        a5 = 1.5409136040E+00
-        a6 = 1.9981117208E-02
-        a7 = -9.5203865864E-05
-        a8 = 7.9739318223E+00
-        a9 = -7.5614568881E-02
-        a10 = 4.7237011074E-04
         A = a5 + a6 * T + a7 * T ** 2
         B = a8 + a9 * T + a10 * T ** 2
         mu = mu_w * (1 + A * S + B * S ** 2)
@@ -241,4 +231,4 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,
         CFb[i] = Cb[i]/Cb[0]        
     print ('Done \n\n'  )
 
-    return r,Jw,Cb,Cp,Cm,Pbar, first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux

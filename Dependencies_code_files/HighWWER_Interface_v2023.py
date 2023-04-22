@@ -32,6 +32,19 @@ u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 99.0 #Enter Recovey Ratio (%)
 pressure_drop = 0.3 #Enter total pressure drop (bars)
 
+##Calculate viscosity
+
+a1 = 1.5700386464E-01
+a2 = 6.4992620050E+01
+a3 = -9.1296496657E+01
+a4 = 4.2844324477E-05
+a5 = 1.5409136040E+00
+a6 = 1.9981117208E-02
+a7 = -9.5203865864E-05
+a8 = 7.9739318223E+00
+a9 = -7.5614568881E-02
+a10 = 4.7237011074E-04
+
 """Enter Membrane Constants at 25C. If unavailable enter 0 and it will be estimated by the software according to membrane manufacturer performance report"""
 """
 --------------------------------------------
@@ -83,7 +96,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 """Run the program by pressing F5"""
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar, first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux)=WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
+(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux)=WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
 
 
 import xlsxwriter
@@ -92,7 +105,7 @@ folder_name = 'Wastewater_Effluent_Filtration'
 # Check if the folder exists, create it if it doesn't
 if not os.path.exists(folder_name):
     os.makedirs(folder_name)
-folder_path = r'C:\Users\Mangu\Desktop\Nir Water Lab\High-Recovery-Effluent-RO\Wastewater_Effluent_Filtration'  # replace with your desired path
+folder_path = r'C:\Users\Mangu\Desktop\Nir Water Lab\High-Recovery-Effluent-RO\Wastewater_Effluent_Filtration'  # replace with your desired path 
 os.makedirs(folder_path, exist_ok=True)
 
 # define filename and check for existing files with the same name
