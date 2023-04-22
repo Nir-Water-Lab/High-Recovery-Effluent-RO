@@ -55,13 +55,6 @@ Pw4, Ps4 = 4.65e-7, 1.404e-8
 # r = np.linspace(0, r_f, step_num) 
 
 
-# first_stage = len(r) * 0.495 / 0.99 
-# second_stage = len(r) * (0.79) / 0.99
-# third_stage = len(r) * (0.91) / 0.99
-# fourth_stage = len(r) * (0.96) / 0.99
-# fifth_stage = len(r) * (0.98) / 0.99
-
-
  
 """Enter manufacturer results from standard test conditions for estimating missing membrane constants"""
 """
@@ -90,7 +83,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 """Run the program by pressing F5"""
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar)=WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
+(r,Jw,Cb,Cp,Cm,Pbar, first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux)=WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
 
 
 import xlsxwriter
@@ -118,7 +111,7 @@ col = 0
 r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
-headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)']
+headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)']
 for i, header in enumerate(headers):
     worksheet.write(0, i, header)
 
@@ -129,8 +122,15 @@ for i in range(len(r)):
     worksheet.write(row, 3, Cp[i])
     worksheet.write(row, 4, Cm[i])
     worksheet.write(row, 5, Pbar[i])
-    
+
+    worksheet.write(1, 6, first_stage_Avg_flux)
+    worksheet.write(1, 7, second_stage_Avg_flux)
+    worksheet.write(1, 8, third_stage_Avg_flux)
+    worksheet.write(1, 9, fourth_stage_Avg_flux)
+    worksheet.write(1, 10, fifth_stage_Avg_flux)
     row += 1
+
+
 
 workbook.close()
 

@@ -1,4 +1,4 @@
-def WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop):
+def WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop):
     
     # Import standard library modules first.
     #import os
@@ -90,17 +90,51 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,NaCl_st
     
     
     """Temperature corrections for permeability constants"""
-    Pw0 = Pw_std if Pw0 == 0 else Pw0       
-    Ps0 = Ps_std if Ps0 == 0 else Ps0
-    
-    Pw= Pw0*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps= Ps0*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
-    first_stage = len(r) * 0.495 / 0.99 
-    second_stage = len(r) * (0.79) / 0.99
-    third_stage = len(r) * (0.91) / 0.99
-    fourth_stage = len(r) * (0.96) / 0.99
-    fifth_stage = len(r) * (0.98) / 0.99
+
+    Pw1 = Pw_std if Pw1 == 0 else Pw1       
+    Ps1 = Ps_std if Ps1 == 0 else Ps1
+
+    Pw2 = Pw_std if Pw2 == 0 else Pw2       
+    Ps2 = Ps_std if Ps2 == 0 else Ps2
+
+    Pw3 = Pw_std if Pw3 == 0 else Pw3       
+    Ps3 = Ps_std if Ps3 == 0 else Ps3
+
+    Pw4 = Pw_std if Pw4 == 0 else Pw4       
+    Ps4 = Ps_std if Ps4 == 0 else Ps4
+
+    first_stage = int(len(r) * 0.495 / 0.99) 
+    second_stage = int(len(r) * (0.79) / 0.99)
+    third_stage = int(len(r) * (0.91) / 0.99)
+    fourth_stage = int(len(r) * (0.96) / 0.99)
+    fifth_stage = int(len(r) * (0.98) / 0.99)
+
+    Pw= Pw1*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps= Ps1*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+
+    Pw= Pw2*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps= Ps2*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+
+    Pw= Pw3*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps= Ps3*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+
+    Pw= Pw4*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps= Ps4*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+
+
+    # assign Pw and Ps values based on the stage
+    for i in range(len(r)):
+        if i <= first_stage:
+            Pw, Ps = Pw1, Ps1
+        elif first_stage < i <= second_stage:
+            Pw, Ps = Pw2, Ps2
+        elif second_stage < i <= third_stage:
+            Pw, Ps = Pw3, Ps3
+        else:
+            Pw, Ps = Pw4, Ps4
+
+    
 
 
     pressure_boost = [3, 5, 7, 9]
@@ -188,6 +222,15 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,NaCl_st
 
             Jw[i] = optimize.bisect(func, 1e-8 ,1e-4 , xtol = 1e-17, rtol = 5e-15, maxiter = 500)   #uses the bisection method to find Jw within the boundary conditions
             #print(Jw)
+            
+            #Calculate average flux per stage
+            first_stage_Avg_flux = (sum(Jw[:first_stage + 1]) / (first_stage + 1)) * 3600000 
+            second_stage_Avg_flux = (sum(Jw[first_stage + 1:second_stage + 1]) / (second_stage - first_stage)) * 3600000 
+            third_stage_Avg_flux = (sum(Jw[second_stage + 1:third_stage + 1]) / (third_stage - second_stage)) * 3600000 
+            fourth_stage_Avg_flux = (sum(Jw[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) * 3600000 
+            fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (len(r) - fourth_stage - 1)) * 3600000  
+
+
             Cp[i] = (Cb[i]*Ps*exp(Jw[i]/k[i]))/(Jw[i]+Ps*exp(Jw[i]/k[i]))           #SD model
             Cm[i] = Cp[i] +(Cb[i]-Cp[i])*exp(Jw[i]/k[i])    # mass balance, film theory
             CF[i] = Cm[i]/Cb[0]       #concentration ploarization factor (CF) for the i-th stage of the reverse osmosis process            
@@ -198,4 +241,4 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl, P_feed,t,u0,recovery,Pw0,Ps0,ks,P_std,NaCl_st
         CFb[i] = Cb[i]/Cb[0]        
     print ('Done \n\n'  )
 
-    return r,Jw,Cb,Cp,Cm,Pbar
+    return r,Jw,Cb,Cp,Cm,Pbar, first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux
