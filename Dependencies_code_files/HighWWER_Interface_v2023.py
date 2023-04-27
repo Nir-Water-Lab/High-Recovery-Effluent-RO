@@ -26,13 +26,14 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 15.0 #Enter Pressure (bars) 
+P_feed = 15.0 #Enter Pressure (bars)
+P_permeate = 0.01 
 t = 25.0 #Enter Temperature (celcius) 
 u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 99.0 #Enter Recovey Ratio (%)
 pressure_drop = 0.3 #Enter total pressure drop (bars)
 
-##Calculate viscosity
+## Viscosity Parameters
 
 a1 = 1.5700386464E-01
 a2 = 6.4992620050E+01
@@ -96,8 +97,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 """Run the program by pressing F5"""
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux)=WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_feed,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
-
+(r,Jw,Cb,Cp,Cm,Pbar,SEC,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC)=WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_feed,P_permeate,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop)
 
 import xlsxwriter
 # Create folder
@@ -124,7 +124,7 @@ col = 0
 r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
-headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)']
+headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)','SEC (kWh/m3)', 'SEC_1 (kWh/m3)', 'SEC_2 (kWh/m3)', 'SEC_3 (kWh/m3)', 'SEC_4 (kWh/m3)', 'SEC_5 (kWh/m3)', 'Total_SEC (kWh/m3)']
 for i, header in enumerate(headers):
     worksheet.write(0, i, header)
 
@@ -141,6 +141,17 @@ for i in range(len(r)):
     worksheet.write(1, 8, third_stage_Avg_flux)
     worksheet.write(1, 9, fourth_stage_Avg_flux)
     worksheet.write(1, 10, fifth_stage_Avg_flux)
+    
+    worksheet.write(row,11, SEC[i])
+    worksheet.write(1, 12, SEC_1)
+    worksheet.write(1, 13, SEC_2)
+    worksheet.write(1, 14, SEC_3)
+    worksheet.write(1, 15, SEC_4)
+    worksheet.write(1, 16, SEC_5)
+    worksheet.write(1, 17, Total_SEC)
+    
+    
+
     row += 1
 
 

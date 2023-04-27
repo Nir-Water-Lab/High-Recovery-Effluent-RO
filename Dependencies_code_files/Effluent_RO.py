@@ -1,4 +1,4 @@
-def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_feed,t,u0,visco,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop):
+def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_feed,P_permeate,t,u0,recovery,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop):
     
     # Import standard library modules first.
     #import os
@@ -51,7 +51,7 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
     dr = r[1] - r[0]    # step size
     d = d_mil * 2.54e-5
     Pbar = np.zeros(len(r))    
-    
+    SEC = np.zeros(len(r))
     S = np.zeros(len(r))
     Cb = np.zeros(len(r))
 
@@ -94,6 +94,7 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
     Pw4 = Pw_std if Pw4 == 0 else Pw4       
     Ps4 = Ps_std if Ps4 == 0 else Ps4
 
+    """ Recovery rates"""
     first_stage = int(len(r) * 0.495 / 0.99) 
     second_stage = int(len(r) * (0.79) / 0.99)
     third_stage = int(len(r) * (0.91) / 0.99)
@@ -139,7 +140,6 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
             Pbar[i] = P_feed + pressure_boost[2] - pressure_drop * (r[i] / r[-1])
         else:
             Pbar[i] = P_feed + pressure_boost[3] - pressure_drop * (r[i] / r[-1])
-
 
     
         PHI = 1.0
@@ -213,7 +213,7 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
             Jw[i] = optimize.bisect(func, 1e-8 ,1e-4 , xtol = 1e-17, rtol = 5e-15, maxiter = 500)   #uses the bisection method to find Jw within the boundary conditions
             #print(Jw)
             
-            #Calculate average flux per stage
+            """Calculate average flux per stage"""
             first_stage_Avg_flux = (sum(Jw[:first_stage + 1]) / (first_stage + 1)) * 3600000 
             second_stage_Avg_flux = (sum(Jw[first_stage + 1:second_stage + 1]) / (second_stage - first_stage)) * 3600000 
             third_stage_Avg_flux = (sum(Jw[second_stage + 1:third_stage + 1]) / (third_stage - second_stage)) * 3600000 
@@ -226,9 +226,37 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
             CF[i] = Cm[i]/Cb[0]       #concentration ploarization factor (CF) for the i-th stage of the reverse osmosis process            
             kphi=kphi+1
 
+            # """Specific Energy Consumption"""
+            # SEC = ((1 - len(r)/len(r))) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
+
+            # calculate SEC for each stage and append to SEC list
+
         if r[i]<recovery/100:       #checks if the current recovery rate r[i] is less than the target recovery rate 
             Cb[i+1] = (Cb[i]*(1-r[i]) - dr*Cp[i])/(1-r[i+1])        
-        CFb[i] = Cb[i]/Cb[0]        
+        CFb[i] = Cb[i]/Cb[0]
+
+    """Specific Energy Consumption and Average SEC Per stage"""
+    for i in range(len(r)):
+        if i <= first_stage:
+            SEC[i] = ((1 - first_stage)/first_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
+        elif first_stage < i <= second_stage:
+            SEC[i] = ((1 - second_stage)/second_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
+        elif second_stage < i <= third_stage:
+            SEC[i] = ((1 - third_stage)/third_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
+        elif third_stage < i <= fourth_stage:
+            SEC[i] = ((1 - fourth_stage)/fourth_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
+        else:
+            SEC[i] = ((1 - fifth_stage)/fifth_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
+
+
+    SEC_1 = (sum(SEC[:first_stage + 1]) / (first_stage + 1))  
+    SEC_2 = (sum(SEC[first_stage + 1:second_stage + 1]) / (second_stage - first_stage))  
+    SEC_3 = (sum(SEC[second_stage + 1:third_stage + 1]) / (third_stage - second_stage))  
+    SEC_4 = (sum(SEC[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) 
+    SEC_5 = (sum(SEC[fourth_stage + 1:])  / (len(r) - fourth_stage - 1))
+
+    Total_SEC = SEC_1 + SEC_2 + SEC_3 + SEC_4 + SEC_5 
+               
     print ('Done \n\n'  )
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux
+    return r,Jw,Cb,Cp,Cm,Pbar,SEC,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC
