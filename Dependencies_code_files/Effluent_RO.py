@@ -64,6 +64,7 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
     Jw = np.zeros(len(r))
     CFb = np.zeros(len(r))
     CF = np.zeros(len(r))
+    Mcp = np.zeros(len(r))
 
     
     """Get constants from standard test conditions"""
@@ -202,8 +203,28 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
             k[i] = Sh * D_NaCl / d 
 
 
-            """ Pressure Drop"""
-            
+            """ Pressure Drop
+            c_tag, alph_tag, sig_tag , Z = Coefficients and exponents
+            GR = filament spacing to diameter ratio
+            Lf = filament spacing
+            Df = filament Diameter
+            """
+            C_tag = 14.8
+            alpha_tag = - 0.910
+            sigma_tag = - 0.525
+            GR = GR
+            Df = Df
+            Zeta = 0.0256
+            Lf = 0
+            pressure_drop_corr = ((rho * u0**2 * 2 * Lf) * (C_tag * Re_c ** alpha_tag *  GR ** sigma_tag + Zeta ) ) / Df
+
+            """ Correlation for CP Modulus
+            C, alpha, Beta, Gamma, Sigma = Coefficients and exponents
+            m = adjustment factor for Re_t
+            Re_t = Reynolds number-transmembrane velocity
+            Mcp = Concentration Polarisation Modulus
+            """
+            Mcp [i] = C * Re_c ** alpha (m * Re_t) ** Beta * Sc ** gamma * GR ** Sigma + 1
 
 
         """find Jw(i), Cm(i) and PHI(i)"""
