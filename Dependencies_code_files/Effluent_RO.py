@@ -1,4 +1,4 @@
-def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_feed,P_permeate,t,u0,recovery,Pw0, Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,pressure_drop):
+def WATRO(Ca, P, K, Mg, Na, Sl, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_feed,P_permeate,pressure_drop,t,u0,recovery,Pw0, Ps0,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4):
     #, ,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4
     # Import standard library modules first.
     #import os
@@ -58,6 +58,7 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
     S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098)
     Cb[0] = (Cl + Na + Mg + Ca + K)
     
+    
     Cp = np.zeros(len(r))
     Cm = np.zeros(len(r))
     k = np.zeros(len(r))
@@ -65,6 +66,8 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
     CFb = np.zeros(len(r))
     CF = np.zeros(len(r))
     Mcp = np.zeros(len(r))
+    
+    #pressure_drop = np.zeros(len(r))
 
     
     """Get constants from standard test conditions"""
@@ -82,74 +85,86 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
     
     """Temperature corrections for permeability constants"""
 
-    Pw0 = Pw_std if Pw0 == 0 else Pw0
-    Ps0 = Ps_std if Ps0 == 0 else Pw0
+    # Pw0 = Pw_std if Pw0 == 0 else Pw0
+    # Ps0 = Ps_std if Ps0 == 0 else Pw0
 
-    # Pw1 = Pw_std if Pw1 == 0 else Pw1       
-    # Ps1 = Ps_std if Ps1 == 0 else Ps1
+    Pw1 = Pw_std if Pw1 == 0 else Pw1       
+    Ps1 = Ps_std if Ps1 == 0 else Ps1
 
-    # Pw2 = Pw_std if Pw2 == 0 else Pw2       
-    # Ps2 = Ps_std if Ps2 == 0 else Ps2
+    Pw2 = Pw_std if Pw2 == 0 else Pw2       
+    Ps2 = Ps_std if Ps2 == 0 else Ps2
 
-    # Pw3 = Pw_std if Pw3 == 0 else Pw3       
-    # Ps3 = Ps_std if Ps3 == 0 else Ps3
+    Pw3 = Pw_std if Pw3 == 0 else Pw3       
+    Ps3 = Ps_std if Ps3 == 0 else Ps3
 
-    # Pw4 = Pw_std if Pw4 == 0 else Pw4       
-    # Ps4 = Ps_std if Ps4 == 0 else Ps4
+    Pw4 = Pw_std if Pw4 == 0 else Pw4       
+    Ps4 = Ps_std if Ps4 == 0 else Ps4
 
-    # """ Recovery rates"""
-    # first_stage = int(len(r) * 0.495 / 0.99) 
-    # second_stage = int(len(r) * (0.79) / 0.99)
-    # third_stage = int(len(r) * (0.91) / 0.99)
-    # fourth_stage = int(len(r) * (0.96) / 0.99)
-    # fifth_stage = int(len(r) * (0.98) / 0.99)
+    """ Recovery rates"""
+    first_stage = int(len(r) * 0.495 / 0.98) 
+    second_stage = int(len(r) * (0.78) / 0.98)
+    third_stage = int(len(r) * (0.90) / 0.98)
+    fourth_stage = int(len(r) * (0.95) / 0.98)
+    fifth_stage = int(len(r) * (0.97) / 0.98)
 
-    Pw = Pw0*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps = Ps0*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
-    # Pw= Pw1*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    # Ps= Ps1*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    # Pw = Pw0*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    # Ps = Ps0*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw= Pw1*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps= Ps1*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
-    # Pw= Pw2*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    # Ps= Ps2*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw= Pw2*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps= Ps2*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
-    # Pw= Pw3*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    # Ps= Ps3*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw= Pw3*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps= Ps3*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
-    # Pw= Pw4*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    # Ps= Ps4*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw= Pw4*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps= Ps4*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
 
     # assign Pw and Ps values based on the stage
-    # for i in range(len(r)):
-    #     if i <= first_stage:
-    #         Pw, Ps = Pw1, Ps1
-    #     elif first_stage < i <= second_stage:
-    #         Pw, Ps = Pw2, Ps2
-    #     elif second_stage < i <= third_stage:
-    #         Pw, Ps = Pw3, Ps3
-    #     else:
-    #         Pw, Ps = Pw4, Ps4
+    for i in range(len(r)):
+        if i <= first_stage:
+            Pw, Ps = Pw1, Ps1
+        elif first_stage < i <= second_stage:
+            Pw, Ps = Pw2, Ps2
+        elif second_stage < i <= third_stage:
+            Pw, Ps = Pw3, Ps3
+        else:
+            Pw, Ps = Pw4, Ps4
 
     
 
-
+    #Calculating pressure per stage
     pressure_boost = [3, 5, 7, 9]
     for i in range(len(r)):
-        Pbar[i] = P_feed - pressure_drop * (r[i] / r[-1])
-        # if i <= first_stage:
-        #     Pbar[i] = P_feed - pressure_drop * (r[i] / r[-1])
-        # elif first_stage < i <= second_stage:
-        #     Pbar[i] = P_feed + pressure_boost[0] - pressure_drop * (r[i] / r[-1])
-        # elif second_stage < i <= third_stage:
-        #     Pbar[i] = P_feed + pressure_boost[1] - pressure_drop * (r[i] / r[-1])
-        # elif third_stage < i <= fourth_stage:
-        #     Pbar[i] = P_feed + pressure_boost[2] - pressure_drop * (r[i] / r[-1])
-        # else:
-        #     Pbar[i] = P_feed + pressure_boost[3] - pressure_drop * (r[i] / r[-1])
+        if i <= first_stage:
+            Pbar[i] = P_feed - pressure_drop * (r[i]/r[len(r)-1])
+        elif first_stage < i <= second_stage:
+            Pbar[i] = P_feed + pressure_boost[0] - pressure_drop * (r[i]/r[len(r)-1])
+        elif second_stage < i <= third_stage:
+            Pbar[i] = P_feed + pressure_boost[1] - pressure_drop * (r[i]/r[len(r)-1])
+        elif third_stage < i <= fourth_stage:
+            Pbar[i] = P_feed + pressure_boost[2] - pressure_drop * (r[i]/r[len(r)-1])
+        else:
+            Pbar[i] = P_feed + pressure_boost[3] - pressure_drop * (r[i]/r[len(r)-1])
+        
+
+    #Crossflow velocity corrections per stage 
+    for i in range(len(r)):
+        if i <= first_stage:
+            u0 = u0 * (1/(1-r[i]))
+        elif first_stage < i <= second_stage:
+            u0 = u0 * (1/(1-r[i]))
+        elif second_stage < i <= third_stage:
+            u0 = u0 * (1/(1-r[i]))
+        else:
+            u0 = u0 * (1/(1-r[i]))
 
     
         PHI = 1.0
         """mass transfer coefficient"""
+        ks = 2.9404e-4
         k[i] = ks
         if ks == 0:     #If ks is not provided, it computes for the value of ks as below and assigns it for each recovery step
             RHO_PHREE = """
@@ -180,10 +195,7 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
             rho = 1000*sol_rho[2][0]
             S[i] = S0 / (1 - r[i])      # bulk salinity in kg/m^3
             visc = visco(t, S[i])       # (1.234*10**-6)*exp(0.00212*S[i]+1965/T) seawater viscocity in pa*s  from Sharkwy et al. 2009
-            D_NaCl = (6.725 * 10 ** -6) * exp(0.1546 * S[i] * 10 ** -3 - 2513 / T)  # Diffusivity  of NaCl in seawater in  m^2/s  from taniguchi et al 2001
-            Sh = 0.065 * ((rho * u0 * (1 - r[i]) * 2 * d / visc) ** 0.875) * (visc / (rho * D_NaCl)) ** 0.25    # sherwood number  from taniguchi et al 2001
-            k[i] = Sh * D_NaCl / d  # mass transfer coefficient in m/sec
-            """" Correlations; Mass Transfer, Pressure drop, and Concentration Polarisation Modulus """
+            
             """Mass Transfer
             Re_c = Reynolds number, crossflow velocity
             rho = fluid density
@@ -193,14 +205,13 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
             Sh = Sherwoods Number
             Sc = Schmidts  Number
             """
-            Re_c = (rho * u0 * (1 - r[i]) * d ) / visc 
-            Sc = u0 / (rho * D_NaCl)
+            D_NaCl = (6.725 * 10 ** -6) * exp(0.1546 * S[i] * 10 ** -3 - 2513 / T)  # Diffusivity  of NaCl in seawater in  m^2/s  from taniguchi et al 2001
+            Re_c = (rho * u0 * (1 - r[i]) * 2 * d ) / visc
+            Sc = visc / (rho * D_NaCl)
+            Sh = 0.065*(Re_c ** 0.875) * (Sc ** 0.25)                       #Schock and Miquel 1987
+            #Sh = 0.065 * ((rho * u0 * (1 - r[i]) * 2 * d / visc) ** 0.875) * (visc / (rho * D_NaCl)) ** 0.25    # sherwood number  from taniguchi et al 2001
+            k[i] = Sh * D_NaCl / d  # mass transfer coefficient in m/sec
 
-            Sh = 0.065*Re_c ** 0.875 * Sc ** 0.25                       #Schock and Miquel 1987
-            
-            Sh = 0.2 * Re_c ** 0.57 * Sc ** 0.40                    # Koutsou et al  2009
-
-            k[i] = Sh * D_NaCl / d 
 
 
             """ Pressure Drop
@@ -209,14 +220,16 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
             Lf = filament spacing
             Df = filament Diameter
             """
-            C_tag = 14.8
-            alpha_tag = - 0.910
-            sigma_tag = - 0.525
-            GR = GR
-            Df = Df
-            Zeta = 0.0256
-            Lf = 0
-            pressure_drop_corr = ((rho * u0**2 * 2 * Lf) * (C_tag * Re_c ** alpha_tag *  GR ** sigma_tag + Zeta ) ) / Df
+            
+            # C_tag = 14.8
+            # alpha_tag = - 0.910
+            # sigma_tag = - 0.525
+            # GR = 1.98
+            # d = d_mil * 2.54e-5
+            # Zeta = 0.0256
+            # Lf = 2.8e-3            
+            # pressure_drop[i] = ((rho * (u0**2) * 2 * Lf) * (C_tag * (Re_c ** alpha_tag) *  (GR ** sigma_tag) + Zeta ) ) / d           #Boram Gu et al
+            #print(pressure_drop)
 
             """ Correlation for CP Modulus
             C, alpha, Beta, Gamma, Sigma = Coefficients and exponents
@@ -224,7 +237,13 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
             Re_t = Reynolds number-transmembrane velocity
             Mcp = Concentration Polarisation Modulus
             """
-            Mcp [i] = C * Re_c ** alpha (m * Re_t) ** Beta * Sc ** gamma * GR ** Sigma + 1
+            # C = 5.5e-3
+            # alpha = - 0.422
+            # beta = 1.09
+            # gamma = 0.672
+            # sigma = 0.536
+            # m = 10**2
+            # Mcp [i] = C * (Re_c ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1            #Boram Gu et al
 
 
         """find Jw(i), Cm(i) and PHI(i)"""
@@ -260,13 +279,13 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
 
             Jw[i] = optimize.bisect(func, 1e-8 ,1e-4 , xtol = 1e-17, rtol = 5e-15, maxiter = 500)   #uses the bisection method to find Jw within the boundary conditions
             #print(Jw)
-            Avg_flux = ((sum(Jw)) / len(r)) * 3600000 
-            # """Calculate average flux per stage"""
-            # first_stage_Avg_flux = (sum(Jw[:first_stage + 1]) / (first_stage + 1)) * 3600000 
-            # second_stage_Avg_flux = (sum(Jw[first_stage + 1:second_stage + 1]) / (second_stage - first_stage)) * 3600000 
-            # third_stage_Avg_flux = (sum(Jw[second_stage + 1:third_stage + 1]) / (third_stage - second_stage)) * 3600000 
-            # fourth_stage_Avg_flux = (sum(Jw[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) * 3600000 
-            # fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (len(r) - fourth_stage - 1)) * 3600000  
+            
+            """Calculate average flux per stage"""
+            first_stage_Avg_flux = (sum(Jw[:first_stage + 1]) / (first_stage + 1)) * 3600000 
+            second_stage_Avg_flux = (sum(Jw[first_stage + 1:second_stage + 1]) / (second_stage - first_stage)) * 3600000 
+            third_stage_Avg_flux = (sum(Jw[second_stage + 1:third_stage + 1]) / (third_stage - second_stage)) * 3600000 
+            fourth_stage_Avg_flux = (sum(Jw[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) * 3600000 
+            fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (len(r) - fourth_stage - 1)) * 3600000  
 
 
             Cp[i] = (Cb[i]*Ps*exp(Jw[i]/k[i]))/(Jw[i]+Ps*exp(Jw[i]/k[i]))           #SD model
@@ -279,34 +298,19 @@ def WATRO(Ca, P, K, Mg, Na, S, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_fee
             Cb[i+1] = (Cb[i]*(1-r[i]) - dr*Cp[i])/(1-r[i+1])        
         CFb[i] = Cb[i]/Cb[0]
 
-    for i in range(len(r)):
-        SEC[i] = ((1 - recovery)/recovery) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
+        """Specific Energy Consumption """
+    SEC_1 = ((1 - r[0])/r[-1]) * (Pbar[i] * 0.02778)
+    SEC_2 = ((1 - r[first_stage + 1])/r[-1]) * (pressure_boost[0] * 0.02778)
+    SEC_3 = ((1 - r[second_stage + 1])/r[-1]) * (pressure_boost[1] * 0.02778)
+    SEC_4 = ((1 - r[third_stage + 1])/r[-1]) * (pressure_boost[2] * 0.02778)
+    SEC_5 =  ((1 - r[fourth_stage + 1])/r[-1]) * (pressure_boost[3] * 0.02778)
 
-    Average_SEC = (sum(SEC)) / len(r)
+    Total_SEC = SEC_1 + SEC_2 + SEC_3 + SEC_4 + SEC_5        
+    print ('Done \n \n ' )
+    
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, S
+    
 
-    # """Specific Energy Consumption and Average SEC Per stage  @ A. J. Karabelas et. al  """
-    # for i in range(len(r)):
-    #     if i <= first_stage:
-    #         SEC[i] = ((1 - first_stage)/first_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
-    #     elif first_stage < i <= second_stage:
-    #         SEC[i] = ((1 - second_stage)/second_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
-    #     elif second_stage < i <= third_stage:
-    #         SEC[i] = ((1 - third_stage)/third_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
-    #     elif third_stage < i <= fourth_stage:
-    #         SEC[i] = ((1 - fourth_stage)/fourth_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
-    #     else:
-    #         SEC[i] = ((1 - fifth_stage)/fifth_stage) * (pressure_drop * 0.02778) + ((Pbar[i] * 0.02778) - (P_permeate * 0.02778))
-
-
-    # SEC_1 = (sum(SEC[:first_stage + 1]) / (first_stage + 1))  
-    # SEC_2 = (sum(SEC[first_stage + 1:second_stage + 1]) / (second_stage - first_stage))  
-    # SEC_3 = (sum(SEC[second_stage + 1:third_stage + 1]) / (third_stage - second_stage))  
-    # SEC_4 = (sum(SEC[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) 
-    # SEC_5 = (sum(SEC[fourth_stage + 1:])  / (len(r) - fourth_stage - 1))
-
-    # Total_SEC = SEC_1 + SEC_2 + SEC_3 + SEC_4 + SEC_5 
-               
-    print ('Done \n\n'  )
-
-    return r,Jw,Cb,Cp,Cm,Pbar,SEC, Average_SEC, Avg_flux
-# ,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC
+            
+        
+           
