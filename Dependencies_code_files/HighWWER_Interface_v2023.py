@@ -26,15 +26,13 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 15.0 #Enter Pressure (bars)
-P_permeate = 0.01 
+P_feed = 4.9 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
-u0 = 0.17 #Enter feed cross-flow velocity (m/s)
+#u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 98.0 #Enter Recovey Ratio (%)
-pressure_drop = 0.3 #Enter total pressure drop (bars)
+#pressure_drop = 0.3 #Enter total pressure drop (bars)
 
 ## Viscosity Parameters
-
 a1 = 1.5700386464E-01
 a2 = 6.4992620050E+01
 a3 = -9.1296496657E+01
@@ -46,6 +44,14 @@ a8 = 7.9739318223E+00
 a9 = -7.5614568881E-02
 a10 = 4.7237011074E-04
 
+##Pressure drop parameters
+C = 5.5e-3
+GR = 1.98
+alpha = - 0.422
+gamma = 0.672
+sigma = 0.536
+L = 7.0
+
 """Enter Membrane Constants at 25C. If unavailable enter 0 and it will be estimated by the software according to membrane manufacturer performance report"""
 """
 --------------------------------------------
@@ -55,18 +61,14 @@ Pb0 : B(OH)3 permeability (float)
 ks : Average mass transfer for charged solutes (float)
 kb : Average mass transfer for uncharged (float)
 """
-Pw0 = 12.65e-7 #1.084e-6 #5.793e-7 #1.084e-6 #Enter water permeabiliy (if unavailable enter 0 - value will be derived from manufacturer data)
-Ps0 = 9.404e-8 #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
-ks = 2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
+# #1.084e-6 #5.793e-7 #1.084e-6 #Enter water permeabiliy (if unavailable enter 0 - value will be derived from manufacturer data)
+# #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
+ks = 0 #2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
 Pw1, Ps1 = 1.208e-6, 2.414e-8 #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
 Pw2, Ps2 = 1.222e-6, 2.533e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
 Pw3, Ps3 = 1.817e-6, 2.56e-8 #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
 Pw4, Ps4 = 2.05e-6, 2.439e-8 #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
-
-# """Number of Steps in the Process"""
-# step_num = int(recovery + 1)
-# r_f = recovery/100.0
-# r = np.linspace(0, r_f, step_num) 
+ 
 
 
  
@@ -97,7 +99,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 """Run the program by pressing F5"""
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, S)=WATRO(Ca, P, K, Mg, Na, Sl, Cl,a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, P_feed,P_permeate,pressure_drop,t,u0,recovery,Pw0, Ps0, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4)
+(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, S, k, pressure_drop, Mcp, CF, Re_c, U)=WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L)
  
 import xlsxwriter
 # Create folder
@@ -124,8 +126,8 @@ col = 0
 r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
-headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)', 'SEC_1 (kWh/m3)', 'SEC_2 (kWh/m3)', 'SEC_3 (kWh/m3)', 'SEC_4 (kWh/m3)', 'SEC_5 (kWh/m3)', 'Total_SEC (kWh/m3)','Density','Salinity']
-#'CP modulus ', 'CP modulus Corr', ' Pressure drop Corr'
+headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)', 'SEC_1 (kWh/m3)', 'SEC_2 (kWh/m3)', 'SEC_3 (kWh/m3)', 'SEC_4 (kWh/m3)', 'SEC_5 (kWh/m3)', 'Total_SEC (kWh/m3)','Density','Salinity','Mass transfer',' Pressure drop Corr','CP modulus Corr','CP Factor ', 'Reynolds number','Cross-flow Velocity', 'u5']
+#, , 
 
 for i, header in enumerate(headers):
     worksheet.write(0, i, header)
@@ -138,10 +140,6 @@ for i in range(len(r)):
     worksheet.write(row, 4, Cm[i])
     worksheet.write(row, 5, Pbar[i])
     
-    
-    # worksheet.write(row,9, CF[i]) 
-    # worksheet.write(row,10, Mcp[i])
-    # worksheet.write(row, 11, pressure_drop[i])
 
     worksheet.write(1, 6, first_stage_Avg_flux)
     worksheet.write(1, 7, second_stage_Avg_flux)
@@ -157,9 +155,14 @@ for i in range(len(r)):
     worksheet.write(1, 15, SEC_5)
     worksheet.write(1, 16, Total_SEC)
     worksheet.write(1,17,rho)
-    worksheet.write(row,18, S[i])         
-    
-   
+    worksheet.write(row,18, S[i])
+    worksheet.write(row,19, k[i])
+    worksheet.write(row, 20, pressure_drop[i])
+    worksheet.write(row,21, Mcp[i])
+    worksheet.write(row,22, CF[i])
+    worksheet.write(row,23, Re_c[i])
+    worksheet.write(row,24, U[i])          
+    #worksheet.write(row, 25, l[i])
     
     
 
