@@ -1,4 +1,4 @@
-def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10, C,GR,alpha,gamma,sigma,L):
+def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Ct_feed,Alk_feed):
     #, ,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4, 
     # Import standard library modules first.
     #import os
@@ -41,6 +41,7 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
 
     """Number of Steps in the Process"""
     step_num = int(recovery + 1)
+    """Initialization of variables"""
     T = t + 273.15
     Ppa = P_feed * 1e5
     kphi = 0
@@ -56,8 +57,8 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
     S = np.zeros(len(r))
     Cb = np.zeros(len(r))
 
-    S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098)
-    Cb[0] = (Cl + Na + Mg + Ca + K)
+    S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Ct_feed/1000)
+    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Ct_feed/12011)
     
     
     Cp = np.zeros(len(r))
@@ -67,6 +68,9 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
     CFb = np.zeros(len(r))
     CF = np.zeros(len(r))
     Mcp = np.zeros(len(r))
+    Ctb = np.zeros(len(r))      #Total carbonate in bulk
+    Alkb = np.zeros(len(r))
+    Btb = np.zeros(len(r))
     
     pressure_drop = np.zeros(len(r))
     Fd = np.zeros(len(r))
@@ -106,13 +110,13 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
 
     """ Recovery rates"""
     first_stage = int(len(r) * 0.495 / 0.98) 
-    second_stage = int(len(r) * (0.78) / 0.98)
-    third_stage = int(len(r) * (0.90) / 0.98)
-    fourth_stage = int(len(r) * (0.95) / 0.98)
+    second_stage = int(len(r) * (0.74) / 0.98)
+    third_stage = int(len(r) * (0.86) / 0.98)
+    fourth_stage = int(len(r) * (0.93) / 0.98)
     fifth_stage = int(len(r) * (0.97) / 0.98)
 
-    # Pw = Pw0*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    # Ps = Ps0*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    
+    """Temperature corrections for permeability constants"""
     Pw= Pw1*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
     Ps= Ps1*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
@@ -125,10 +129,44 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
     Pw= Pw4*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
     Ps= Ps4*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
+    # """Pw=Pw0*exp(2640*(1/T-1/298.15))  #alternative ROSA equation"""
+    Feed  = """
+            SOLUTION 1 effluent
+            units     mol/l
+            temp     %f
+            pH       %f
+            Cl       %e  
+            Na       %e
+            Mg       %e
+            K        %e
+            Ca       %e
+            S(6)     %e
+            Alkalinity       %e
+            C       %f mg/l
+            USE solution 1
+            USER_PUNCH
+            -headings ALK Ct RHO  
+            -start           
+            10 PUNCH ALK
+            20 PUNCH TOT("C")
+            30 PUNCH RHO
+             -end
+            SELECTED_OUTPUT
+            -reset          false
+            -user_punch     true
+            END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Alk_feed,Ct_feed)
+    sol_feed = phreecalc(Feed)
+    #print(sol_feed)
+    rho= sol_feed[1][2]
+    Alkb[0]=sol_feed[1][0] #/((1+S0/1000)/(rho/1000))
+    Ctb[0]=sol_feed[1][1] #/((1+S0/1000)/(rho/1000))
+    
+
     
     
     # assign Pw and Ps values based on the stage
     for i in range(len(r)):
+        """Water Flux and salt passage model""" """Including Acid Base Dynamics"""
         if i <= first_stage:
             Pw, Ps = Pw1, Ps1
         elif first_stage < i <= second_stage:
@@ -160,20 +198,22 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
         k[i] = ks
         if ks == 0:     #If ks is not provided, it computes for the value of ks as below and assigns it for each recovery step
             RHO_PHREE = """
-                SOLUTION 1 seawater
+                SOLUTION 1 effluent
                 units     mol/l
-                temp     %f
+                temp     %f 
                 pH       %f
                 Cl       %e   
                 Na       %e
                 Mg       %e
                 K        %e
                 Ca       %e
+                S(6)     %e
+                C        %e
                 USE solution 1
                 REACTION_PRESSURE 1
                 %f
                 USER_PUNCH
-                -headings RHO osmotic_coefficient ALK Ct Bt
+                -headings RHO osmotic_coefficient ALK Ct  
                 -start
                 10 PUNCH RHO
                 20 PUNCH OSMOTIC
@@ -181,10 +221,11 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
                 SELECTED_OUTPUT
                 -reset          false
                 -user_punch     true
-                END"""%(t,7,Cl/(1-r[i]),Na/(1-r[i]),Mg/(1-r[i]),K/(1-r[i]),Ca/(1-r[i]),Pbar[i])
+                END"""%(t,7,Cl/(1-r[i]),Na/(1-r[i]),Mg/(1-r[i]),K/(1-r[i]),Ca/(1-r[i]),SO4/(1-r[i]),Ctb[i], Pbar[i])
             sol_rho = phreecalc(RHO_PHREE)
             #print(sol_rho)
             rho = 1000*sol_rho[2][0]
+            PHI = sol_rho[2][1]
 
             """Mass Transfer
             Re_c = Reynolds number, crossflow velocity
@@ -251,8 +292,8 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
             ## Concentration Polarization Modulus
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
-            #Calculating pressure per stage
-        pressure_boost = [0.67, 0.37, 2.58, 7.0 ]
+            #Calculating pressure per stage [0.67, 0.37, 2.58, 7.0 ]
+        pressure_boost = [0.7, 1.8, 4.45, 8.7 ]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -265,14 +306,15 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
             Pbar[i] = P_feed + pressure_boost[3] - pressure_drop[i] * (r[i]/r[len(r)-1])
 
             
-
+        
         """find Jw(i), Cm(i) and PHI(i)"""
         CF[i] = 1/(1-r[i])         #Correction factor 
         PHI_old =10
         while (abs(PHI-PHI_old)>0.001):     # loop that runs until the absolute difference between PHI and PHI_old is less than or equal to 0.001
+            
             PHI_old=PHI
             osmo_phree = """
-                SOLUTION 1 mediterranean seawater
+                SOLUTION 1 efluent 
                 units      mol/l
                 temp       %f
                 pH         %f
@@ -280,36 +322,30 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
                 Na         %e 
                 Mg         %e 
                 K          %e 
-                Ca         %e               
-                USE solution 1            
+                Ca         %e
+                S(6)       %e
+                C          %e          
+                USE solution 1 
                 USER_PUNCH
-                -headings osmotic_coefficient
+                -headings osmotic_coefficient   RHO
                 -start
                 10 PUNCH OSMOTIC
                 20 PUNCH RHO
                  -end
                 SELECTED_OUTPUT
-                -reset                false
-                -user_punch           true
-                 END"""%(t,7,Cl*CF[i],Na*CF[i],Mg*CF[i],K*CF[i],Ca*CF[i])
+                -reset          false
+                -user_punch     true 
+                 END"""%(t,7,Cl*CF[i],Na*CF[i],Mg*CF[i],K*CF[i],Ca*CF[i],SO4*CF[i],Ctb[i])
             sol_osm=phreecalc(osmo_phree)
             #print(sol_osm)
             PHI = sol_osm[1][0] 
             rho = sol_osm[1][1]
             Jw[i] = optimize.bisect(func,1e-8 ,1e-4, xtol = 1e-17, rtol = 5e-15, maxiter = 500)   #uses the bisection method to find Jw within the boundary conditions
-            
-            
-            """Calculate average flux per stage"""
-            first_stage_Avg_flux = (sum(Jw[:first_stage + 1]) / (first_stage + 1)) * 3600000 
-            second_stage_Avg_flux = (sum(Jw[first_stage + 1:second_stage + 1]) / (second_stage - first_stage)) * 3600000 
-            third_stage_Avg_flux = (sum(Jw[second_stage + 1:third_stage + 1]) / (third_stage - second_stage)) * 3600000 
-            fourth_stage_Avg_flux = (sum(Jw[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) * 3600000 
-            fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (fifth_stage - fourth_stage)) * 3600000  
-
+             
 
             Cp[i] = (Cb[i]*Ps*exp(Jw[i]/k[i]))/(Jw[i]+Ps*exp(Jw[i]/k[i]))           #SD model
-            Cm[i] = Cp[i] +(Cb[i]-Cp[i])*exp(Jw[i]/k[i])    # mass balance, film theory
-            CF[i] = Cm[i]/Cb[0]       #concentration ploarization factor (CF) for the i-th stage of the reverse osmosis process            
+            Cm[i] = Cp[i] +(Cb[i]-Cp[i])*exp(Jw[i]/k[i])    # eqn1 WATRO mass balance, film theory
+            CF[i] = Cm[i]/Cb[0]       #concentration factor (CF) for the i-th stage of the reverse osmosis process            
             kphi=kphi+1
 
 
@@ -317,6 +353,13 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
             Cb[i+1] = (Cb[i]*(1-r[i]) - dr*Cp[i])/(1-r[i+1])        
         CFb[i] = Cb[i]/Cb[0]
 
+        """Calculate average flux per stage"""
+        first_stage_Avg_flux = (sum(Jw[:first_stage + 1]) / (first_stage + 1)) * 3600000 
+        second_stage_Avg_flux = (sum(Jw[first_stage + 1:second_stage + 1]) / (second_stage - first_stage)) * 3600000
+        third_stage_Avg_flux = (sum(Jw[second_stage + 1:third_stage + 1]) / (third_stage - second_stage)) * 3600000 
+        fourth_stage_Avg_flux = (sum(Jw[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) * 3600000
+        fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (fifth_stage - fourth_stage)) * 3600000  
+        
         """Specific Energy Consumption """
         SEC_1 = ((1 - r[0])/r[-1]) * (Pbar[i] * 0.02778)
         SEC_2 = ((1 - r[first_stage + 1])/r[-1]) * (pressure_boost[0] * 0.02778)
@@ -325,8 +368,68 @@ def WATRO(Ca, K, Mg, Na, Cl, P_feed,t,recovery,ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d
         SEC_5 =  ((1 - r[fourth_stage + 1])/r[-1]) * (pressure_boost[3] * 0.02778)
 
         Total_SEC = SEC_1 + SEC_2 + SEC_3 + SEC_4 + SEC_5        
-    print ('Done \n \n ' )
     
+
+    
+        #print(r[i])
+        """Reactive transport model"""     
+        bulk_speciation = """
+            SOLUTION 1 effluent
+            units     mol/kgw
+            temp        %f
+            pH          %f
+            Cl          %e
+            S(6)        %e   
+            Na          %e 
+            Mg          %e 
+            K           %e 
+            Ca          %e 
+            C           %e
+            Alkalinity    %e 
+            USE solution 1
+            REACTION_PRESSURE 1
+            %f
+            SELECTED_OUTPUT
+            -reset    false
+            -high_precision     true
+            -ph       true
+            -molalities      HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4-  MgCO3
+             END"""%(t,7.0,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ctb[i],Alkb[i],Pbar[i])
+        
+        sol=phreecalc(bulk_speciation)
+        #print(sol)
+        
+        
+    i=i-1
+    bulk_speciation = """
+        SOLUTION 1 
+        units     mol/kgw
+        temp        %f
+        pH          %f
+        Cl          %e
+        S(6)        %e  
+        Na          %e 
+        Mg          %e 
+        K           %e 
+        Ca          %e 
+        C           %e
+        B           %e 
+        Alkalinity    %e
+        USE solution 1
+        REACTION_PRESSURE 1
+        %f
+        SELECTED_OUTPUT
+        -reset    false
+        -high_precision     true
+        -ph       true
+        -molalities      B(OH)4-  B(OH)3  HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4- MgCO3
+        -totals               Ca
+        -saturation_indices   Aragonite
+        -equilibrium_phases   Aragonite
+        EQUILIBRIUM_PHASES 1
+            Aragonite 0 0
+        END"""%(t,7,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ctb[i],Btb[i],Alkb[i],Pbar[i])
+        
     return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, S, k, pressure_drop, Mcp, CF, Re_c, U
     
 
