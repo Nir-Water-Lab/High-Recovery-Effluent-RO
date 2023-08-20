@@ -64,11 +64,11 @@ kb : Average mass transfer for uncharged (float)
 # #1.084e-6 #5.793e-7 #1.084e-6 #Enter water permeabiliy (if unavailable enter 0 - value will be derived from manufacturer data)
 # #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
 ks = 0 #2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
-Pw1, Ps1 =1.208e-6, 2.414e-8 #1.208e-6, 2.414e-8 #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
-Pw2, Ps2 =1.208e-6, 2.414e-8 #1.222e-6, 2.533e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
-Pw3, Ps3 =1.208e-6, 2.414e-8 #1.817e-6, 2.56e-8 #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
-Pw4, Ps4 =1.208e-6, 2.414e-8 #2.05e-6, 2.439e-8 #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
-
+Pw1, Ps1 = 1.208e-6, 2.414e-8 #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
+Pw2, Ps2 = 1.222e-6, 2.533e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
+Pw3, Ps3 = 1.817e-6, 2.56e-8 #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
+Pw4, Ps4 = 2.05e-6, 2.439e-8 #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
+Pco2 = 1.5e-2 #imaginary
  
 """Enter manufacturer results from standard test conditions for estimating missing membrane constants"""
 """
@@ -94,7 +94,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, S, k, pressure_drop, Mcp, CF, Re_c, U)=Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Ct_feed,Alk_feed)
+(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, S, k, pressure_drop, Mcp, CF, Re_c, U)=Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Ct_feed,Alk_feed)
  
 import xlsxwriter
 # Create folder

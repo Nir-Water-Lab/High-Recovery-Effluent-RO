@@ -1,4 +1,4 @@
-def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Ct_feed,Alk_feed):
+def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Ct_feed,Alk_feed):
     #, ,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4, 
     # Import standard library modules first.
     #import os
@@ -44,39 +44,31 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
     """Initialization of variables"""
     T = t + 273.15
     Ppa = P_feed * 1e5
-    kphi = 0
-    PHI = 1.0
-    PHI_old = 0
+    kphi = 0;   PHI = 1.0;  PHI_old = 0
     
     
-    r_f = recovery/100.0
-    r = np.linspace(0, r_f, step_num) 
+    r_f = recovery/100.0;   r = np.linspace(0, r_f, step_num) 
     dr = r[1] - r[0]    # step size
-    d = d_mil * 2.54e-5
-    Pbar = np.zeros(len(r))    
-    S = np.zeros(len(r))
-    Cb = np.zeros(len(r))
+    d = d_mil * 2.54e-5;    Pbar = np.zeros(len(r))    
+    S = np.zeros(len(r));   Cb = np.zeros(len(r))
 
     S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Ct_feed/1000)
     Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Ct_feed/12011)
     
     
-    Cp = np.zeros(len(r))
-    Cm = np.zeros(len(r))
-    k = np.zeros(len(r))
-    Jw = np.zeros(len(r))
-    CFb = np.zeros(len(r))
-    CF = np.zeros(len(r))
-    Mcp = np.zeros(len(r))
-    Ctb = np.zeros(len(r))      #Total carbonate in bulk
-    Alkb = np.zeros(len(r))
-    Btb = np.zeros(len(r))
+    Cp = np.zeros(len(r));  Cm = np.zeros(len(r))
+    k = np.zeros(len(r));   Jw = np.zeros(len(r))
+    CFb = np.zeros(len(r)); CF = np.zeros(len(r))
+    Mcp = np.zeros(len(r)); Ctb = np.zeros(len(r))      #Total carbonate in bulk
+    Alkb = np.zeros(len(r)); Ctp=np.zeros(len(r))
+    Alkp=np.zeros(len(r))
     
-    pressure_drop = np.zeros(len(r))
-    Fd = np.zeros(len(r))
-    U = np.zeros(len(r))
-    Re_c = np.zeros(len(r))
-    Sh = np.zeros(len(r))
+    
+    pressure_drop = np.zeros(len(r));   Fd = np.zeros(len(r)); U = np.zeros(len(r))
+    Re_c = np.zeros(len(r));    Sh = np.zeros(len(r))
+    pH_b = np.zeros(len(r));    pH_m=np.zeros(len(r));      pH_p=np.zeros(len(r))
+    CO2_b=np.zeros(len(r));     HCO3_b=np.zeros(len(r));    CO3_b=np.zeros(len(r))
+    Theta=np.zeros(len(r));     w_H_eff=np.zeros(len(r));   w_OH_eff=np.zeros(len(r))
     
     """Get constants from standard test conditions"""
     NaClp = NaCl_std * (1 - Rej_NaCl / 100)
@@ -398,6 +390,113 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
         
         sol=phreecalc(bulk_speciation)
         #print(sol)
+
+        pH_b[i]=sol[2][0];  HCO3_b[i]=sol[2][1];  CO2_b[i]=sol[2][2]
+        OH_b=sol[2][4]; H_b=sol[2][5]; MgOH_b=sol[2][6]; HSO4_b = sol[2][7]; MgCO3_b = sol[2][8]
+        CO3_b[i] = Ctb[i] - HCO3_b[i] - CO2_b[i]
+   
+        #Using the solution diffusion model, transport;  HCO3, CO2
+        if i==0:            
+            HCO3_p= (Ps*HCO3_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Ps*exp(Jw[i]/k[i]))
+            CO2_p=  (Pco2 *CO2_b[0] *exp(Jw[i]/k[i]))/(Jw[0]+Pco2*exp(Jw[i]/k[i]))    # 0% rejection 
+            Ctp[0]=HCO3_p+CO2_p
+
+        OH_p = OH_b
+        H_p = H_b
+        MgOH_m=MgOH_b*exp(Jw[i]/k[i])
+        HSO4_m=HSO4_b*exp(Jw[i]/k[i])     
+        CO3_m=CO3_b[i]*exp(Jw[i]/k[i])
+        MgCO3_m = MgCO3_b*exp(Jw[i]/k[i])
+        CO2_m=CO2_b[i] 
+        pH_m_old=100; pH_m[i]=pH_b[i]; Alkm= Alkb[i]*exp(Jw[i]/k[i]); Alkm_old = 0
+        kk = 0
+        while(abs((pH_m[i]-pH_m_old)/pH_m[i])>0.0001)and(kk<50):
+            Alkm_old = Alkm
+            pH_m_old = pH_m[i]
+            """Estimation of weak acid species concentration in the film layer"""
+            HCO3_m=HCO3_p+(HCO3_b[i]-HCO3_p)*exp(Jw[i]/k[i])    
+            OH_m = OH_p+(OH_b-OH_p)*exp(Jw[i]/(3.34*k[i]))
+            H_m = H_p+(H_b-H_p)*exp(Jw[i]/(5.62*k[i])) 
+
+            """Weak acid species mass balance in the film layer"""
+            Ctm= HCO3_m + CO2_m + CO3_m
+            """Alkalinity mass balance in the film layer""" 
+            Alkm= HCO3_m + 2*CO3_m + OH_m - H_m + MgOH_m - HSO4_m + 2*MgCO3_m
+
+            film_speciation = """
+                SOLUTION 1 effluent
+                units     mol/kgw
+                temp        %f
+                pH          %f
+                Cl          %e
+                S(6)        %e   
+                Na          %e 
+                Mg          %e 
+                K           %e 
+                Ca          %e 
+                C           %e
+                Alkalinity    %e 
+                USE solution 1
+                REACTION_PRESSURE 1
+                %f
+                SELECTED_OUTPUT
+                -reset    false
+                -high_precision     true
+                -ph       true
+                -molalities      HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4-  MgCO3
+                 END"""%(t,7.0,Cl*CF[i],SO4*CF[i],Na*CF[i],Mg*CF[i],K*CF[i],Ca*CF[i],Ctm,Alkm,Pbar[i])
+            sol=phreecalc(film_speciation)
+            #print(sol)
+            pH_m[i]=sol[2][0];HCO3_m=sol[2][1];CO2_m[i]=sol[2][2]
+            OH_m = sol[2][4]; H_m = sol[2][5];  MgOH_m=sol[2][6]; HSO4_m = sol[2][7] ; MgCO3_m = sol[2][8]
+            CO3_m = Ctm - HCO3_m - CO2_m #sol[2][9]; MgCO3_m = sol[2][10]
+
+            """Permeate concentrations of carbonate species"""
+            HCO3_p= (Ps*HCO3_m)/(Jw[i]+Ps)
+            CO2_p= (Pco2*CO2_m)/(Jw[i]+Pco2)
+
+            kk=kk+1
+            """Permeation of alkalinity due to H+/OH- diffusion-electromigration"""
+            k_Cb = 0.357/(1+exp(-52.63022629*(Cm[i]-0.12)))        
+            Theta[i] = (1-k_Cb-0.05713078)/(1+exp(-1.72843187*(pH_m[i]-7))) + 0.05713078
+            w_H = 0.043; w_OH = 0.000033          
+            w_H_eff[i] = w_H + (OH_m/H_m)*w_OH
+            w_OH_eff[i] = w_OH + (H_m/OH_m)*w_H
+            Rs = 1-Cp[i]/Cm[i]
+
+            a= OH_m*w_OH_eff[i]
+            b= w_OH_eff[i]*(1-Rs)**Theta[i]
+            c=Jw[i]*(1-(1-Rs)**(1+Theta[i]))/(Rs*(1+Theta[i]))
+
+            OH_p = a/(b+c)
+
+            a2= H_m*w_H_eff[i]
+            b2= w_H_eff[i]*(1-Rs)**(-Theta[i])
+            c2=Jw[i]*(1-(1-Rs)**(1-Theta[i]))/(Rs*(1-Theta[i]))
+
+            H_p = a2/(b2+c2)
+
+            Ctp[i]=HCO3_p+CO2_p     #Weak-acid species mass balance in the permeate
+            Alkp[i]=HCO3_p + OH_p - H_p     #Alkalinity mass balance in the permeate
+
+
+        permeate_speciation = """
+            SOLUTION 1 permeate
+            units         mol/kgw
+            temp          %f
+            pH            %f
+            Na            %e 
+            Cl            %e 
+            C             %e 
+            Alkalinity    %e
+            USE solution 1
+            SELECTED_OUTPUT
+            -reset    false
+            -ph       true
+            -molalities      HCO3-  CO2  OH-  H+ CO3-2
+            END"""%(t,7,Cp[i]/2,Cp[i]/2,Ctp[i],Alkp[i])
+                        
+              
         
         
     i=i-1
