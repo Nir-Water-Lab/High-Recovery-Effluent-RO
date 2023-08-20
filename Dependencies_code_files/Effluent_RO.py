@@ -65,10 +65,17 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
     
     
     pressure_drop = np.zeros(len(r));   Fd = np.zeros(len(r)); U = np.zeros(len(r))
-    Re_c = np.zeros(len(r));    Sh = np.zeros(len(r))
-    pH_b = np.zeros(len(r));    pH_m=np.zeros(len(r));      pH_p=np.zeros(len(r))
-    CO2_b=np.zeros(len(r));     HCO3_b=np.zeros(len(r));    CO3_b=np.zeros(len(r))
-    Theta=np.zeros(len(r));     w_H_eff=np.zeros(len(r));   w_OH_eff=np.zeros(len(r))
+    Re_c = np.zeros(len(r))    
+    Sh = np.zeros(len(r))
+    pH_b = np.zeros(len(r))    
+    pH_m = np.zeros(len(r))     
+    pH_p=np.zeros(len(r))
+    CO2_b=np.zeros(len(r))    
+    HCO3_b=np.zeros(len(r))   
+    CO3_b=np.zeros(len(r))
+    Theta=np.zeros(len(r))     
+    w_H_eff=np.zeros(len(r))   
+    w_OH_eff=np.zeros(len(r))
     
     """Get constants from standard test conditions"""
     NaClp = NaCl_std * (1 - Rej_NaCl / 100)
@@ -157,7 +164,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
     
     
     # assign Pw and Ps values based on the stage
-    for i in range(len(r)):
+    for i in range(len(r)-1):
         """Water Flux and salt passage model""" """Including Acid Base Dynamics"""
         if i <= first_stage:
             Pw, Ps = Pw1, Ps1
@@ -444,11 +451,12 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
                 -high_precision     true
                 -ph       true
                 -molalities      HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4-  MgCO3
-                 END"""%(t,7.0,Cl*CF[i],SO4*CF[i],Na*CF[i],Mg*CF[i],K*CF[i],Ca*CF[i],Ctm,Alkm,Pbar[i])
+                 END"""%(t,7,CF[i]*Cl,CF[i]*SO4,CF[i]*Na,CF[i]*Mg,CF[i]*K,CF[i]*Ca,Ctm,Alkm,Pbar[i])
+            
             sol=phreecalc(film_speciation)
             #print(sol)
-            pH_m[i]=sol[2][0];HCO3_m=sol[2][1];CO2_m[i]=sol[2][2]
-            OH_m = sol[2][4]; H_m = sol[2][5];  MgOH_m=sol[2][6]; HSO4_m = sol[2][7] ; MgCO3_m = sol[2][8]
+            pH_m[i]=sol[2][0]; HCO3_m=sol[2][1]; CO2_m=sol[2][2]
+            OH_m = sol[2][4]; H_m = sol[2][5];  MgOH_m=sol[2][6]; HSO4_m = sol[2][7] #; MgCO3_m = sol[2][8]
             CO3_m = Ctm - HCO3_m - CO2_m #sol[2][9]; MgCO3_m = sol[2][10]
 
             """Permeate concentrations of carbonate species"""
@@ -494,40 +502,48 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             -reset    false
             -ph       true
             -molalities      HCO3-  CO2  OH-  H+ CO3-2
-            END"""%(t,7,Cp[i]/2,Cp[i]/2,Ctp[i],Alkp[i])
+             END"""%(t,7,Cp[i]/2,Cp[i]/2,Ctp[i],Alkp[i])
+        
+        sol=phreecalc(permeate_speciation)
+        #print(sol)
+        pH_p[i]=sol[1][0]; HCO3_p=sol[1][1]; CO2_p=sol[1][2]; OH_p=sol[1][3]; H_p=sol[1][4]
+        CO3_p = sol[1][5]
+
+        """Carbonate and alkalinity mass balance"""
+        Ctb[i+1] = (Ctb[i]*(1-r[i]) - dr*Ctp[i])/(1-r[i+1])
+        Alkb[i+1] = (Alkb[i]*(1-r[i]) - dr*Alkp[i])/(1-r[i+1])
                         
               
         
         
     i=i-1
     bulk_speciation = """
-        SOLUTION 1 
-        units     mol/kgw
-        temp        %f
-        pH          %f
-        Cl          %e
-        S(6)        %e  
-        Na          %e 
-        Mg          %e 
-        K           %e 
-        Ca          %e 
-        C           %e
-        B           %e 
-        Alkalinity    %e
-        USE solution 1
-        REACTION_PRESSURE 1
-        %f
-        SELECTED_OUTPUT
-        -reset    false
-        -high_precision     true
-        -ph       true
-        -molalities      B(OH)4-  B(OH)3  HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4- MgCO3
-        -totals               Ca
-        -saturation_indices   Aragonite
-        -equilibrium_phases   Aragonite
-        EQUILIBRIUM_PHASES 1
-            Aragonite 0 0
-        END"""%(t,7,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ctb[i],Btb[i],Alkb[i],Pbar[i])
+            SOLUTION 1 
+            units     mol/kgw
+            temp        %f
+            pH          %f
+            Cl          %e
+            S(6)        %e  
+            Na          %e 
+            Mg          %e 
+            K           %e 
+            Ca          %e 
+            C           %e 
+            Alkalinity    %e
+            USE solution 1
+            REACTION_PRESSURE 1
+            %f
+            SELECTED_OUTPUT
+            -reset    false
+            -high_precision     true
+            -ph       true
+            -molalities      HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4- MgCO3
+            -totals               Ca
+            -saturation_indices   Aragonite
+            -equilibrium_phases   Aragonite
+            EQUILIBRIUM_PHASES 1
+                Aragonite 0 0
+            END"""%(t,7,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ctb[i],Alkb[i],Pbar[i])
         
     return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, S, k, pressure_drop, Mcp, CF, Re_c, U
     
