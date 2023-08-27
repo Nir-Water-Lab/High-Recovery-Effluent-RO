@@ -9,10 +9,7 @@ start_time = time.time()
 """Enter major ions concentrations in mol/l"""
 Ca = 0.001;	P = 0.00007;	K = 0.00060;	
 Mg = 0.00035; Na = 0.00593;	SO4 = 0.00089; Cl = 0.00593
-
-"""Permeability(um/s); Hydroquinone (HQ) and Benzoquinone(BQ), 0.1mM"""
-HQ = 0.55 
-BQ = 0.19 
+Hq = 0.0001; Bq = 0.00005
 """Enter acid-base parameters"""
 """
 ---------------------------------
@@ -34,7 +31,7 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 7.42 #Enter Pressure (bars) 
+P_feed = 4.9 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 #u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 98.0 #Enter Recovey Ratio (%)
@@ -68,6 +65,11 @@ Pw2, Ps2 = 1.222e-6, 2.533e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
 Pw3, Ps3 = 1.817e-6, 2.56e-8 #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
 Pw4, Ps4 = 2.05e-6, 2.439e-8 #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
 
+"""Permeability(m/s); Hydroquinone (HQ) and Benzoquinone(BQ), 0.1mM"""
+Phq = 0.55e-6 
+Pbq = 0.19e-6 
+khq = 0.0
+kbq = 0.0
 
 """Enter manufacturer results from standard test conditions for estimating missing membrane constants"""
 """
@@ -93,7 +95,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 
 """The call for the function"""
 (r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, 
- SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U) = SEC_Analysis(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,
+ SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U,Hq_p,Hq_b,Hq_Accum_Mgl,Bq_p,Bq_b,Bq_Accum_Mgl) = SEC_Analysis(Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Phq,Pbq,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,
                                                                                              C,GR,alpha,gamma,sigma,L,feed_pH,Alk_feed)
 
 
@@ -123,7 +125,7 @@ r = np.linspace(0, int(recovery), int(recovery + 1))
 
 #write data to worksheet
 headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)', 'SEC_1 (kWh/m3)', 'SEC_2 (kWh/m3)', 'SEC_3 (kWh/m3)', 'SEC_4 (kWh/m3)', 'SEC_5 (kWh/m3)', 'Total_SEC (kWh/m3)',
-           'Density','Mass transfer',' Pressure drop Corr','CP modulus Corr','Cross-flow Velocity']
+           'Density','Mass transfer',' Pressure drop Corr','CP modulus Corr','Cross-flow Velocity','Momentary Permeate HQ','Hq_b','Accumulated HQ, Mg/l','Momentary Permeate BQ','Bq_b','Bq_Accum_Mgl']
 
 for i, header in enumerate(headers):
     worksheet.write(0, i, header)
@@ -153,13 +155,20 @@ for i in range(len(r)):
     worksheet.write(row, 19, pressure_drop[i])
     worksheet.write(row,20, Mcp[i])
     worksheet.write(row,21, U[i])
+    worksheet.write(row,22,Hq_p[i])
+    worksheet.write(row,23,Hq_b[i])
+    worksheet.write(row,24,Hq_Accum_Mgl[i])
+
+    worksheet.write(row,25,Bq_p[i])
+    worksheet.write(row,26,Bq_b[i])
+    worksheet.write(row,27,Bq_Accum_Mgl[i])
 
 
     row+= 1
 
 workbook.close()
 
-end_time = time.time()
+end_time = time.time()  
 elapsed_time = end_time - start_time
 
 print(f"Elapsed time: {elapsed_time:.4f} seconds")

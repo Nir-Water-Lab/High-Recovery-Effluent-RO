@@ -2,6 +2,13 @@ import os
 import numpy as np
 from Effluent_RO import Effluent
 
+import time
+
+start_time = time.time()
+
+
+
+
 """Enter major ions concentrations in mol/l"""
 Ca = 0.001;	P = 0.00007;	K = 0.00060;	
 Mg = 0.00035; Na = 0.00593;	SO4 = 0.00089; Cl = 0.00593
@@ -14,7 +21,8 @@ Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
 feed_pH = 8.0 # Enter pH 
-Ct_feed = 7.0 #Enter total phosphate (mg/l)
+Ct_feed = 7.0 #Enter total inorganic carbon (mg/l)
+Pt_feed = 0.0 #Enter total inorganic phosphate (mg/l)
 Alk_feed = 0.002524
 
 """Enter process operational conditions"""
@@ -26,31 +34,22 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 4.9 #Enter Pressure (bars) 
+P_feed = 7.42 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 #u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 98.0 #Enter Recovey Ratio (%)
 #pressure_drop = 0.3 #Enter total pressure drop (bars)
 
 ## Viscosity Parameters
-a1 = 1.5700386464E-01
-a2 = 6.4992620050E+01
-a3 = -9.1296496657E+01
-a4 = 4.2844324477E-05
-a5 = 1.5409136040E+00
-a6 = 1.9981117208E-02
-a7 = -9.5203865864E-05
-a8 = 7.9739318223E+00
-a9 = -7.5614568881E-02
+a1 = 1.5700386464E-01; a2 = 6.4992620050E+01; a3 = -9.1296496657E+01
+a4 = 4.2844324477E-05; a5 = 1.5409136040E+00; a6 = 1.9981117208E-02
+a7 = -9.5203865864E-05; a8 = 7.9739318223E+00; a9 = -7.5614568881E-02
 a10 = 4.7237011074E-04
 
 ##Pressure drop parameters
-C = 5.5e-3
-GR = 1.98
-alpha = - 0.422
-gamma = 0.672
-sigma = 0.536
-L = 7.0
+C = 5.5e-3; GR = 1.98
+alpha = - 0.422; gamma = 0.672
+sigma = 0.536; L = 7.0
 
 """Enter Membrane Constants at 25C. If unavailable enter 0 and it will be estimated by the software according to membrane manufacturer performance report"""
 """
@@ -68,7 +67,7 @@ Pw1, Ps1 = 1.208e-6, 2.414e-8 #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
 Pw2, Ps2 = 1.222e-6, 2.533e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
 Pw3, Ps3 = 1.817e-6, 2.56e-8 #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
 Pw4, Ps4 = 2.05e-6, 2.439e-8 #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
-Pco2 = 1.5e-2 #imaginary
+Pco2 = 1.5e-2 #Assumed
  
 """Enter manufacturer results from standard test conditions for estimating missing membrane constants"""
 """
@@ -91,10 +90,9 @@ Qw = 4.7 #Enter Permeate flow at standard test conditions (m^3/d)
 Rej_NaCl = 99.5 #Enter NaCl rejection at standard test conditions (%)
 d_mil = 28.0 #enter feed spacer height (mil)
 
-
-
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, S, k, pressure_drop, Mcp, CF, Re_c, U)=Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Ct_feed,Alk_feed)
+(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U,
+ pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp)=Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Ct_feed,Alk_feed)
  
 import xlsxwriter
 # Create folder
@@ -121,7 +119,8 @@ col = 0
 r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
-headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)', 'SEC_1 (kWh/m3)', 'SEC_2 (kWh/m3)', 'SEC_3 (kWh/m3)', 'SEC_4 (kWh/m3)', 'SEC_5 (kWh/m3)', 'Total_SEC (kWh/m3)','Density','Salinity','Mass transfer',' Pressure drop Corr','CP modulus Corr','CP Factor ', 'Reynolds number','Cross-flow Velocity']
+headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)', 'SEC_1 (kWh/m3)', 'SEC_2 (kWh/m3)', 'SEC_3 (kWh/m3)', 'SEC_4 (kWh/m3)', 'SEC_5 (kWh/m3)', 'Total_SEC (kWh/m3)','Density','Mass transfer',
+           ' Pressure drop Corr','CP modulus Corr','Cross-flow Velocity','Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Film layer Alkalinity','Permeate Alkalinity','Trace Conc. in Brine','Trace Conc. in Permeate']
 #, , 
 
 for i, header in enumerate(headers):
@@ -141,6 +140,7 @@ for i in range(len(r)):
     worksheet.write(1, 8, third_stage_Avg_flux)
     worksheet.write(1, 9, fourth_stage_Avg_flux)
     worksheet.write(1, 10, fifth_stage_Avg_flux)
+
     
     
     worksheet.write(1, 11, SEC_1)
@@ -150,13 +150,18 @@ for i in range(len(r)):
     worksheet.write(1, 15, SEC_5)
     worksheet.write(1, 16, Total_SEC)
     worksheet.write(1,17,rho)
-    worksheet.write(row,18, S[i])
-    worksheet.write(row,19, k[i])
-    worksheet.write(row, 20, pressure_drop[i])
-    worksheet.write(row,21, Mcp[i])
-    worksheet.write(row,22, CF[i])
-    worksheet.write(row,23, Re_c[i])
-    worksheet.write(row,24, U[i])          
+    worksheet.write(row,18, k[i])
+    worksheet.write(row, 19, pressure_drop[i])
+    worksheet.write(row,20, Mcp[i])
+    worksheet.write(row,21, U[i])
+    worksheet.write(row,22, pH_b[i])
+    worksheet.write(row,23, pH_p[i])
+    worksheet.write(row,24, pH_m[i])
+    worksheet.write(row,25, Alkb[i])
+    worksheet.write(1,26, Alkm) 
+    worksheet.write(row,27, Alkp[i]) 
+    worksheet.write(row,28, Ctb[i])
+    worksheet.write(row,29, Ctp[i])           
     #worksheet.write(row, 25, l[i])
     
     
@@ -166,5 +171,10 @@ for i in range(len(r)):
 
 
 workbook.close()
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+
+print(f"Elapsed time: {elapsed_time:.4f} seconds")
 
 print(f"File saved to {folder_path}")

@@ -1,7 +1,6 @@
 def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Ct_feed,Alk_feed):
-    #, ,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4, 
+     
     # Import standard library modules first.
-    #import os
     #import sys
     # Then get third party modules.
     from win32com.client import Dispatch 
@@ -65,17 +64,10 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
     
     
     pressure_drop = np.zeros(len(r));   Fd = np.zeros(len(r)); U = np.zeros(len(r))
-    Re_c = np.zeros(len(r))    
-    Sh = np.zeros(len(r))
-    pH_b = np.zeros(len(r))    
-    pH_m = np.zeros(len(r))     
-    pH_p=np.zeros(len(r))
-    CO2_b=np.zeros(len(r))    
-    HCO3_b=np.zeros(len(r))   
-    CO3_b=np.zeros(len(r))
-    Theta=np.zeros(len(r))     
-    w_H_eff=np.zeros(len(r))   
-    w_OH_eff=np.zeros(len(r))
+    Re_c = np.zeros(len(r));    Sh = np.zeros(len(r)); pH_b = np.zeros(len(r))    
+    pH_m = np.zeros(len(r));    pH_p=np.zeros(len(r)); CO2_b=np.zeros(len(r))    
+    HCO3_b=np.zeros(len(r));    CO3_b=np.zeros(len(r)); Theta=np.zeros(len(r))     
+    w_H_eff=np.zeros(len(r));   w_OH_eff=np.zeros(len(r))
     
     """Get constants from standard test conditions"""
     NaClp = NaCl_std * (1 - Rej_NaCl / 100)
@@ -175,7 +167,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
         else:
             Pw, Ps = Pw4, Ps4
         
-        u0 = [0.17, 0.35, 0.83, 1.9, 4.36]
+        u0 = [0.17, 0.35, 0.68, 1.31, 2.83]
         # # #Crossflow velocity corrections per stage
         if i <= first_stage:
             U[i] = u0[0]*(1.0-r[i])
@@ -265,10 +257,10 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             """   
             # #Calculate Average velocity per stage
             u1 = (U[0] + U[50])/ 2
-            u2 = (U[51] + U[78])/2
-            u3 = (U[79] + U[90])/2
-            u4 = (U[91] + U[95])/2
-            u5 = (U[96] + U[98])/2      
+            u2 = (U[51] + U[74])/2
+            u3 = (U[75] + U[86])/2
+            u4 = (U[87] + U[93])/2
+            u5 = (U[94] + U[98])/2      
             #Fd[i]= (6.23*Re_c[i])**-0.3         #friction_factor Boram Gu et al
             Fd[i] = (100*Re_c[i])**-0.25              #friction_factor Blasuis et al
 
@@ -292,7 +284,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [0.67, 0.37, 2.58, 7.0 ]
-        pressure_boost = [0.7, 1.8, 4.45, 8.7 ]
+        pressure_boost = [2.3, 4.3, 9.5, 22.0 ]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -371,7 +363,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
 
     
         #print(r[i])
-        """Reactive transport model"""     
+        """Reactive transport model"""
+        
         bulk_speciation = """
             SOLUTION 1 effluent
             units     mol/kgw
@@ -457,7 +450,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             #print(sol)
             pH_m[i]=sol[2][0]; HCO3_m=sol[2][1]; CO2_m=sol[2][2]
             OH_m = sol[2][4]; H_m = sol[2][5];  MgOH_m=sol[2][6]; HSO4_m = sol[2][7] #; MgCO3_m = sol[2][8]
-            CO3_m = Ctm - HCO3_m - CO2_m #sol[2][9]; MgCO3_m = sol[2][10]
+            CO3_m = Ctm - HCO3_m - CO2_m #; MgCO3_m = sol[2][10]
 
             """Permeate concentrations of carbonate species"""
             HCO3_p= (Ps*HCO3_m)/(Jw[i]+Ps)
@@ -545,7 +538,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
                 Aragonite 0 0
             END"""%(t,7,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ctb[i],Alkb[i],Pbar[i])
         
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, S, k, pressure_drop, Mcp, CF, Re_c, U
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp
+
     
 
             

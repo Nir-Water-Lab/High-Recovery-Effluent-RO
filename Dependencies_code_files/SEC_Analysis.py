@@ -1,4 +1,4 @@
-def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Alk_feed):
+def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Phq,Pbq,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Alk_feed):
     # Import standard library modules first.
     #import sys
     # Then get third party modules.
@@ -46,8 +46,8 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,
     dr = r[1] - r[0]    # step size
     d = d_mil * 2.54e-5;    Pbar = np.zeros(len(r))    
     S = np.zeros(len(r));   Cb = np.zeros(len(r))
-    S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065)
-    Cb[0] = (Cl + Na + Mg + Ca + K + SO4)
+    S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Hq * 110.12 + Bq * 108.09 )
+    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Hq + Bq)
 
     Cp = np.zeros(len(r));  Cm = np.zeros(len(r))
     k = np.zeros(len(r));   Jw = np.zeros(len(r))
@@ -61,6 +61,16 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,
     pH_m = np.zeros(len(r));   pH_p=np.zeros(len(r)); CO2_b=np.zeros(len(r))    
     HCO3_b=np.zeros(len(r));   CO3_b=np.zeros(len(r)); Theta=np.zeros(len(r))     
     w_H_eff=np.zeros(len(r));   w_OH_eff=np.zeros(len(r))
+
+    """Parameters for Hydroquinone and Benzoquinone"""
+    Hq_Accum = np.zeros(len(r))
+    Bq_Accum = np.zeros(len(r))
+    Hq_Accum_Mgl = np.zeros(len(r))
+    Bq_Accum_Mgl = np.zeros(len(r))
+    Hq_p = np.zeros(len(r))
+    Bq_p = np.zeros(len(r))
+    Hq_b = np.zeros(len(r))
+    Bq_b = np.zeros(len(r))
 
     """Get constants from standard test conditions"""
     NaClp = NaCl_std * (1 - Rej_NaCl / 100)
@@ -100,6 +110,8 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,
     Ps= Ps3*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
     Pw= Pw4*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
     Ps= Ps4*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Phq = Phq*exp(0.0483*(T - 298.15))
+    Pbq = Pbq*exp(0.0483*(T - 298.15)) 
 
     Feed  = """
             SOLUTION 1 effluent
@@ -129,7 +141,8 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,
     #print(sol_feed)
     rho= sol_feed[1][2]
     Alkb[0]=sol_feed[1][0] #/((1+S0/1000)/(rho/1000))
-    Ctb[0]=sol_feed[1][1] #/((1+S0/1000)/(rho/1000))
+    Hq_b[0] = Hq
+    Bq_b[0] = Bq
 
     # assign Pw and Ps values based on the stage
     for i in range(len(r)):
@@ -253,7 +266,7 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,
 
             #Calculating pressure per stage [0.67, 0.37, 2.58, 7.0 ]
 
-        pressure_boost = [2.3, 4.3, 9.5, 22.0 ]
+        pressure_boost = [0.53, 0.11, 1.29, 5.47 ]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -322,6 +335,30 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,
         SEC_3 = ((1 - r[second_stage + 1])/r[-1]) * (pressure_boost[1] * 0.02778)
         SEC_4 = ((1 - r[third_stage + 1])/r[-1]) * (pressure_boost[2] * 0.02778)
         SEC_5 =  ((1 - r[fourth_stage + 1])/r[-1]) * (pressure_boost[3] * 0.02778)
-        Total_SEC = SEC_1 + SEC_2 + SEC_3 + SEC_4 + SEC_5 
+        Total_SEC = SEC_1 + SEC_2 + SEC_3 + SEC_4 + SEC_5
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U       
+        """Hydroquinone Transport"""
+        khq = khq or 2 * k[i]
+        kbq = kbq or 2 * k[i]
+
+        # Initialize a variable to keep track of the previous Hq_b value
+        
+        if r[i] < recovery/100:
+            Hq_b[i+1] = (Hq_b[i]*(1-r[i]) - dr*Hq_p[i])/(1-r[i+1])
+            Bq_b[i+1] = (Bq_b[i]*(1-r[i]) - dr*Bq_p[i])/(1-r[i+1])
+
+        #Using the SD_film Model transport; Hydroquinone
+        Hq_p[i] = (Phq * Hq_b[i]* exp(Jw[i] / khq)) / (Jw[0] + Phq * exp(Jw[i] / khq))
+        Bq_p[i] = (Pbq * Bq_b[i]* exp(Jw[i] / kbq)) / (Jw[0] + Pbq * exp(Jw[i] / kbq))
+
+
+        Hq_Accum[0] = Hq_p[0]
+        Bq_Accum[0] = Bq_p[0]
+
+    
+        Hq_Accum[i] = np.average(Hq_p[0:i+1])
+        Bq_Accum[i] = np.average(Bq_p[0:i+1])
+    Hq_Accum_Mgl = Hq_Accum *110120
+    Bq_Accum_Mgl = Bq_Accum *108094
+
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U,Hq_p,Hq_b,Hq_Accum_Mgl,Bq_p,Bq_b,Bq_Accum_Mgl      
