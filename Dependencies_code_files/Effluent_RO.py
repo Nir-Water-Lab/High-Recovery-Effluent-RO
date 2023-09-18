@@ -133,7 +133,6 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             Ca       %e
             S(6)     %e
             Alkalinity       %e
-            C       %f mg/l
             USE solution 1
             USER_PUNCH
             -headings ALK Ct RHO  
@@ -145,7 +144,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             SELECTED_OUTPUT
             -reset          false
             -user_punch     true
-            END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Alk_feed,Ct_feed)
+            END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Alk_feed)
     sol_feed = phreecalc(Feed)
     #print(sol_feed)
     rho= sol_feed[1][2]
@@ -156,7 +155,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
     
     
     # assign Pw and Ps values based on the stage
-    for i in range(len(r)-1):
+    for i in range(len(r)):
         """Water Flux and salt passage model""" """Including Acid Base Dynamics"""
         if i <= first_stage:
             Pw, Ps = Pw1, Ps1
@@ -199,7 +198,6 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
                 K        %e
                 Ca       %e
                 S(6)     %e
-                C        %e
                 USE solution 1
                 REACTION_PRESSURE 1
                 %f
@@ -212,7 +210,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
                 SELECTED_OUTPUT
                 -reset          false
                 -user_punch     true
-                END"""%(t,7,Cl/(1-r[i]),Na/(1-r[i]),Mg/(1-r[i]),K/(1-r[i]),Ca/(1-r[i]),SO4/(1-r[i]),Ctb[i], Pbar[i])
+                END"""%(t,7,Cl/(1-r[i]),Na/(1-r[i]),Mg/(1-r[i]),K/(1-r[i]),Ca/(1-r[i]),SO4/(1-r[i]), Pbar[i])
             sol_rho = phreecalc(RHO_PHREE)
             #print(sol_rho)
             rho = 1000*sol_rho[2][0]
@@ -227,7 +225,10 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             Sh = Sherwoods Number
             Sc = Schmidts  Number
             """
-            S[i] = S0 / (1 - r[i])      # bulk salinity in kg/m^3
+            if i <= third_stage:
+                S[i] = S0 / (1 - r[i])      # bulk salinity in kg/m^3
+            else:
+                S[i] = S0/ (2-r[i])
             visc = visco(t, S[i])       # (1.234*10**-6)*exp(0.00212*S[i]+1965/T) seawater viscocity in pa*s  from Sharkwy et al. 2009
             #print(visc)
             D_NaCl = (6.725 * 10 ** -6) * exp(0.1546 * S[i] * 10 ** -3 - 2513 / T)  # Diffusivity  of NaCl in seawater in  m^2/s  from taniguchi et al 2001
@@ -284,22 +285,25 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [0.67, 0.37, 2.58, 7.0 ]
-        pressure_boost = [2.3, 4.3, 9.5, 22.0 ]
+        pressure_boost = [0.7, 0.27, 0.9, 3.3 ]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
-            Pbar[i] = P_feed + pressure_boost[0] - pressure_drop[i] * (r[i]/r[len(r)-1])
+            Pbar[i] = Pbar[first_stage] + pressure_boost[0] - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif second_stage < i <= third_stage:
-            Pbar[i] = P_feed + pressure_boost[1] - pressure_drop[i] * (r[i]/r[len(r)-1])
+            Pbar[i] = Pbar[second_stage] + pressure_boost[1] - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif third_stage < i <= fourth_stage:
-            Pbar[i] = P_feed + pressure_boost[2] - pressure_drop[i] * (r[i]/r[len(r)-1])
+            Pbar[i] = Pbar[third_stage] + pressure_boost[2] - pressure_drop[i] * (r[i]/r[len(r)-1])
         else:
-            Pbar[i] = P_feed + pressure_boost[3] - pressure_drop[i] * (r[i]/r[len(r)-1])
+            Pbar[i] = Pbar[fourth_stage] + pressure_boost[3] - pressure_drop[i] * (r[i]/r[len(r)-1])
 
             
         
         """find Jw(i), Cm(i) and PHI(i)"""
-        CF[i] = 1/(1-r[i])         #Correction factor 
+        if i < third_stage:
+            CF[i] = 1/(1-r[i])
+        else:
+            CF[i] = 1/(2-r[i])          #Concentration factor    
         PHI_old =10
         while (abs(PHI-PHI_old)>0.001):     # loop that runs until the absolute difference between PHI and PHI_old is less than or equal to 0.001
             
@@ -314,8 +318,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
                 Mg         %e 
                 K          %e 
                 Ca         %e
-                S(6)       %e
-                C          %e          
+                S(6)       %e          
                 USE solution 1 
                 USER_PUNCH
                 -headings osmotic_coefficient   RHO
@@ -326,7 +329,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
                 SELECTED_OUTPUT
                 -reset          false
                 -user_punch     true 
-                 END"""%(t,7,Cl*CF[i],Na*CF[i],Mg*CF[i],K*CF[i],Ca*CF[i],SO4*CF[i],Ctb[i])
+                 END"""%(t,7,Cl*CF[i],Na*CF[i],Mg*CF[i],K*CF[i],Ca*CF[i],SO4*CF[i])
             sol_osm=phreecalc(osmo_phree)
             #print(sol_osm)
             PHI = sol_osm[1][0] 
@@ -340,8 +343,10 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             kphi=kphi+1
 
 
-        if r[i]<recovery/100:       #checks if the current recovery rate r[i] is less than the target recovery rate 
-            Cb[i+1] = (Cb[i]*(1-r[i]) - dr*Cp[i])/(1-r[i+1])        
+        if r[i]<= third_stage/100:       #checks if the current recovery rate r[i] is less than the target recovery rate 
+            Cb[i+1] = (Cb[i]*(1-r[i]) - dr*Cp[i])/(1-r[i+1]) 
+        elif r[i] <= fifth_stage/100:
+            Cb[i+1] = (Cb[i]*(2-r[i]) - dr*Cp[i])/(2-r[i+1])         
         CFb[i] = Cb[i]/Cb[0]
 
         """Calculate average flux per stage"""
@@ -364,7 +369,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
     
         #print(r[i])
         """Reactive transport model"""
-        
+    for i in range(len(r) - 1):
+
         bulk_speciation = """
             SOLUTION 1 effluent
             units     mol/kgw

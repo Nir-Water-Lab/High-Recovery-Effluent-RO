@@ -1,4 +1,5 @@
-def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Phq,Pbq,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Alk_feed):
+def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Pfba, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Alk_feed):
+    #
     # Import standard library modules first.
     #import sys
     # Then get third party modules.
@@ -31,7 +32,7 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
     def func(jw):
         z = exp (jw / k[i])
         cm = ((Ps + jw) * Cb[i] * z) / (jw + Ps * z)
-        cp = Ps * Cb[i] * z / (jw + Ps * z)             #From Eqn 8 in WATRO Paper
+        cp = Ps * Cb[i] * z / (jw + Ps * z)            
         return Pw * (Pbar[i] - (PHI * cm - 0.98 * cp) * T *0.083145) - jw
     
     """Number of Steps in the Process"""
@@ -46,8 +47,8 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
     dr = r[1] - r[0]    # step size
     d = d_mil * 2.54e-5;    Pbar = np.zeros(len(r))    
     S = np.zeros(len(r));   Cb = np.zeros(len(r))
-    S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Hq * 110.12 + Bq * 108.09 )
-    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Hq + Bq)
+    S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Pfba * 214.03) #
+    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Pfba) #
 
     Cp = np.zeros(len(r));  Cm = np.zeros(len(r))
     k = np.zeros(len(r));   Jw = np.zeros(len(r))
@@ -55,6 +56,7 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
     Mcp = np.zeros(len(r)); Ctb = np.zeros(len(r))      #Total carbonate in bulk
     Alkb = np.zeros(len(r)); Ctp=np.zeros(len(r))
     Alkp=np.zeros(len(r))
+    osmotic_pressure = np.zeros(len(r))
 
     pressure_drop = np.zeros(len(r));   Fd = np.zeros(len(r)); U = np.zeros(len(r))
     Re_c = np.zeros(len(r)); Sh = np.zeros(len(r)); pH_b = np.zeros(len(r))    
@@ -100,18 +102,20 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
     third_stage = int(len(r) * (0.86) / 0.98)
     fourth_stage = int(len(r) * (0.93) / 0.98)
     fifth_stage = int(len(r) * (0.97) / 0.98)
+    #print(first_stage,second_stage,third_stage,fourth_stage,fifth_stage)
 
     """Temperature corrections for permeability constants"""
-    Pw= Pw1*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps= Ps1*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
-    Pw= Pw2*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps= Ps2*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
-    Pw= Pw3*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps= Ps3*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
-    Pw= Pw4*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps= Ps4*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
-    Phq = Phq*exp(0.0483*(T - 298.15))
-    Pbq = Pbq*exp(0.0483*(T - 298.15)) 
+    Pw1= Pw1*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps1= Ps1*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw2= Pw2*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps2= Ps2*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw3= Pw3*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps3= Ps3*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw4= Pw4*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps4= Ps4*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+   
+   
+    
 
     Feed  = """
             SOLUTION 1 effluent
@@ -141,8 +145,6 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
     #print(sol_feed)
     rho= sol_feed[1][2]
     Alkb[0]=sol_feed[1][0] #/((1+S0/1000)/(rho/1000))
-    Hq_b[0] = Hq
-    Bq_b[0] = Bq
 
     # assign Pw and Ps values based on the stage
     for i in range(len(r)):
@@ -166,9 +168,10 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
         elif second_stage < i <= third_stage:
             U[i] = u0[2]*(1.0-r[i])
         elif third_stage < i <= fourth_stage:
-            U[i] = u0[3]*(1.0-r[i])
+            U[i] =u0[3]*(1.0-r[i])
         else:
             U[i] = u0[4]*(1.0-r[i])
+
 
         
         PHI = 1.0
@@ -199,7 +202,7 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
                 SELECTED_OUTPUT
                 -reset          false
                 -user_punch     true
-                END"""%(t,7,Cl/(1-r[i]),Na/(1-r[i]),Mg/(1-r[i]),K/(1-r[i]),Ca/(1-r[i]),SO4/(1-r[i]), Pbar[i])
+                 END"""%(t,7,Cl/(1-r[i]),Na/(1-r[i]),Mg/(1-r[i]),K/(1-r[i]),Ca/(1-r[i]),SO4/(1-r[i]), Pbar[i])
             sol_rho = phreecalc(RHO_PHREE)
             #print(sol_rho)
             rho = 1000*sol_rho[2][0]
@@ -214,7 +217,10 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
             Sh = Sherwoods Number
             Sc = Schmidts  Number
             """
-            S[i] = S0 / (1 - r[i])      # bulk salinity in kg/m^3
+            if i <= third_stage:
+                S[i] = S0 / (1 - r[i])
+            else:
+                S[i] = S0 / (2 - r[i])     # bulk salinity in kg/m^3
             visc = visco(t, S[i])       # (1.234*10**-6)*exp(0.00212*S[i]+1965/T) seawater viscocity in pa*s  from Sharkwy et al. 2009
             #print(visc)
             D_NaCl = (6.725 * 10 ** -6) * exp(0.1546 * S[i] * 10 ** -3 - 2513 / T)  # Diffusivity  of NaCl in seawater in  m^2/s  from taniguchi et al 2001
@@ -264,23 +270,26 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
             ## Concentration Polarization Modulus
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1
 
-            #Calculating pressure per stage [0.67, 0.37, 2.58, 7.0 ]
-
-        pressure_boost = [0.53, 0.11, 1.29, 5.47 ]
+            #Calculating pressure per stage  
+        pressure_boost = [0.95,3.4,1.0,0.01 ]        
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
-            Pbar[i] = P_feed + pressure_boost[0] - pressure_drop[i] * (r[i]/r[len(r)-1])
+            Pbar[i] = Pbar[first_stage] + pressure_boost[0] - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif second_stage < i <= third_stage:
-            Pbar[i] = P_feed + pressure_boost[1] - pressure_drop[i] * (r[i]/r[len(r)-1])
+            Pbar[i] = Pbar[second_stage] + pressure_boost[1] - pressure_drop[i]* (r[i]/r[len(r)-1])
+            #print( (r[i]/r[len(r)-1]))
         elif third_stage < i <= fourth_stage:
-            Pbar[i] = P_feed + pressure_boost[2] - pressure_drop[i] * (r[i]/r[len(r)-1])
+            Pbar[i] = Pbar[third_stage] + pressure_boost[2] - pressure_drop[i] * (r[i]/r[len(r)-1])
         else:
-            Pbar[i] = P_feed + pressure_boost[3] - pressure_drop[i] * (r[i]/r[len(r)-1])
+            Pbar[i] = Pbar[fourth_stage] + pressure_boost[3] - pressure_drop[i] * (r[i]/r[len(r)-1])
 
 
         """find Jw(i), Cm(i) and PHI(i)"""
-        CF[i] = 1/(1-r[i])         #Correction factor
+        if i <=third_stage:
+            CF[i] = 1/(1-r[i])
+        else:
+            CF[i] = 1/(2-r[i])         #Concentration factor
         PHI_old =10
         while (abs(PHI-PHI_old)>0.001): 
 
@@ -318,8 +327,15 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
             CF[i] = Cm[i]/Cb[0]       #concentration factor (CF) for the i-th stage of the reverse osmosis process 
             kphi=kphi+1 
 
-        if r[i]<recovery/100:       #checks if the current recovery rate r[i] is less than the target recovery rate
-            Cb[i+1] = (Cb[i]*(1-r[i]) - dr*Cp[i])/(1-r[i+1])        
+        
+        osmotic_pressure[i] = (PHI * Cm[i] - 0.98 * Cp[i]) * T *0.083145
+        #print(osmotic_pressure[i]) 
+
+        #if r[i]<recovery/100:       #checks if the current recovery rate r[i] is less than the target recovery rate
+        if r[i] <= third_stage/100:
+            Cb[i+1] = (Cb[i]*(1-r[i]) - dr*Cp[i])/(1-r[i+1])  
+        elif r[i] <= fifth_stage/100:
+            Cb[i+1] = (Cb[i]*(2-r[i]) - dr*Cp[i])/(2-r[i+1])        
         CFb[i] = Cb[i]/Cb[0]  
 
         """Calculate average flux per stage"""
@@ -337,28 +353,6 @@ def SEC_Analysis (Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_s
         SEC_5 =  ((1 - r[fourth_stage + 1])/r[-1]) * (pressure_boost[3] * 0.02778)
         Total_SEC = SEC_1 + SEC_2 + SEC_3 + SEC_4 + SEC_5
 
-        """Hydroquinone Transport"""
-        khq = khq or 2 * k[i]
-        kbq = kbq or 2 * k[i]
-
-        # Initialize a variable to keep track of the previous Hq_b value
-        
-        if r[i] < recovery/100:
-            Hq_b[i+1] = (Hq_b[i]*(1-r[i]) - dr*Hq_p[i])/(1-r[i+1])
-            Bq_b[i+1] = (Bq_b[i]*(1-r[i]) - dr*Bq_p[i])/(1-r[i+1])
-
-        #Using the SD_film Model transport; Hydroquinone
-        Hq_p[i] = (Phq * Hq_b[i]* exp(Jw[i] / khq)) / (Jw[0] + Phq * exp(Jw[i] / khq))
-        Bq_p[i] = (Pbq * Bq_b[i]* exp(Jw[i] / kbq)) / (Jw[0] + Pbq * exp(Jw[i] / kbq))
 
 
-        Hq_Accum[0] = Hq_p[0]
-        Bq_Accum[0] = Bq_p[0]
-
-    
-        Hq_Accum[i] = np.average(Hq_p[0:i+1])
-        Bq_Accum[i] = np.average(Bq_p[0:i+1])
-    Hq_Accum_Mgl = Hq_Accum *110120
-    Bq_Accum_Mgl = Bq_Accum *108094
-
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U,Hq_p,Hq_b,Hq_Accum_Mgl,Bq_p,Bq_b,Bq_Accum_Mgl      
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, U ,osmotic_pressure      

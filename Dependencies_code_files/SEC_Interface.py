@@ -9,7 +9,7 @@ start_time = time.time()
 """Enter major ions concentrations in mol/l"""
 Ca = 0.001;	P = 0.00007;	K = 0.00060;	
 Mg = 0.00035; Na = 0.00593;	SO4 = 0.00089; Cl = 0.00593
-Hq = 0.0001; Bq = 0.00005
+Pfba = 0.0001
 """Enter acid-base parameters"""
 """
 ---------------------------------
@@ -31,11 +31,11 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 4.9 #Enter Pressure (bars) 
+P_feed = 4.85 #Enter Pressure (bars) 3.47
 t = 25.0 #Enter Temperature (celcius) 
 #u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 98.0 #Enter Recovey Ratio (%)
-#pressure_drop = 0.3 #Enter total pressure drop (bars)
+#pressure_drop = 0.03 #Enter total pressure drop (bars)
 
 ## Viscosity Parameters
 a1 = 1.5700386464E-01; a2 = 6.4992620050E+01; a3 = -9.1296496657E+01
@@ -56,20 +56,17 @@ Ps0 : Salt permeability (float)
 Pb0 : B(OH)3 permeability (float)
 ks : Average mass transfer for charged solutes (float)
 kb : Average mass transfer for uncharged (float)
+Pw, Ps : 5.07e-07, 1.12517e-05 , 4.4744e-07, 4.82217e-06 (R = 50%); 2.9983e-07, 4.87087e-08,  (99% impractical),
+different membranes Pw, 40% reductn: 7.38e-07, 7.33e-07, 1.09e-06, 1.23e-06 
 """
 # #1.084e-6 #5.793e-7 #1.084e-6 #Enter water permeabiliy (if unavailable enter 0 - value will be derived from manufacturer data)
 # #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
 ks = 0 #2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
-Pw1, Ps1 = 1.208e-6, 2.414e-8 #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
-Pw2, Ps2 = 1.222e-6, 2.533e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
-Pw3, Ps3 = 1.817e-6, 2.56e-8 #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
-Pw4, Ps4 = 2.05e-6, 2.439e-8 #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
+Pw1, Ps1 = 1.23e-06, 4.87087e-08 #1.208e-6, 2.414e-8 #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
+Pw2, Ps2 =1.09e-06, 4.87087e-08 #1.222e-6, 2.533e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
+Pw3, Ps3 =7.33e-07, 4.87087e-08 #1.817e-6, 2.56e-8 #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
+Pw4, Ps4 =7.38e-07, 4.87087e-08 #2.05e-6, 2.439e-8 #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
 
-"""Permeability(m/s); Hydroquinone (HQ) and Benzoquinone(BQ), 0.1mM"""
-Phq = 0.55e-6 
-Pbq = 0.19e-6 
-khq = 0.0
-kbq = 0.0
 
 """Enter manufacturer results from standard test conditions for estimating missing membrane constants"""
 """
@@ -95,9 +92,9 @@ d_mil = 28.0 #enter feed spacer height (mil)
 
 """The call for the function"""
 (r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, 
- SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U,Hq_p,Hq_b,Hq_Accum_Mgl,Bq_p,Bq_b,Bq_Accum_Mgl) = SEC_Analysis(Ca, K, Mg, Na, Cl,SO4,Hq,Bq, P_feed,t,recovery, ks,khq,kbq,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Phq,Pbq,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,
-                                                                                             C,GR,alpha,gamma,sigma,L,feed_pH,Alk_feed)
-
+ SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop,U,osmotic_pressure) = SEC_Analysis(Ca, K, Mg, Na, Cl,SO4,Pfba, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,
+                                                                                             C,GR,alpha,gamma,sigma,L,feed_pH,Alk_feed) 
+#
 
 import xlsxwriter
 # Create folder
@@ -125,7 +122,7 @@ r = np.linspace(0, int(recovery), int(recovery + 1))
 
 #write data to worksheet
 headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)', 'SEC_1 (kWh/m3)', 'SEC_2 (kWh/m3)', 'SEC_3 (kWh/m3)', 'SEC_4 (kWh/m3)', 'SEC_5 (kWh/m3)', 'Total_SEC (kWh/m3)',
-           'Density','Mass transfer',' Pressure drop Corr','CP modulus Corr','Cross-flow Velocity','Momentary Permeate HQ','Hq_b','Accumulated HQ, Mg/l','Momentary Permeate BQ','Bq_b','Bq_Accum_Mgl']
+           'Density','Mass transfer',' Pressure drop Corr','Cross-flow Velocity','osmotic_pressure'] #
 
 for i, header in enumerate(headers):
     worksheet.write(0, i, header)
@@ -153,15 +150,10 @@ for i in range(len(r)):
     worksheet.write(1,17,rho)
     worksheet.write(row,18, k[i])
     worksheet.write(row, 19, pressure_drop[i])
-    worksheet.write(row,20, Mcp[i])
-    worksheet.write(row,21, U[i])
-    worksheet.write(row,22,Hq_p[i])
-    worksheet.write(row,23,Hq_b[i])
-    worksheet.write(row,24,Hq_Accum_Mgl[i])
-
-    worksheet.write(row,25,Bq_p[i])
-    worksheet.write(row,26,Bq_b[i])
-    worksheet.write(row,27,Bq_Accum_Mgl[i])
+    worksheet.write(row,20, U[i])
+    worksheet.write(row,21,osmotic_pressure[i])
+    
+    
 
 
     row+= 1
