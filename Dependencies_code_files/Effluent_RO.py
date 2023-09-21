@@ -1,4 +1,4 @@
-def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Ct_feed,Alk_feed):
+def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pp,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Pt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage, fifth_stage):
      
     # Import standard library modules first.
     #import sys
@@ -19,7 +19,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
 
     def phreecalc(input_string):
         """Get results from PHREEQC"""
-        pitzer_result = selected_array('pitzer.dat', input_string)
+        pitzer_result = selected_array('minteq.v4.dat', input_string)
         return pitzer_result
     
     def visco(T, S):
@@ -51,8 +51,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
     d = d_mil * 2.54e-5;    Pbar = np.zeros(len(r))    
     S = np.zeros(len(r));   Cb = np.zeros(len(r))
 
-    S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Ct_feed/1000)
-    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Ct_feed/12011)
+    S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Nt_feed/1000 + Pt_feed/1000)
+    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Nt_feed/14011 + Pt_feed/30970)
     
     
     Cp = np.zeros(len(r));  Cm = np.zeros(len(r))
@@ -61,14 +61,34 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
     Mcp = np.zeros(len(r)); Ctb = np.zeros(len(r))      #Total carbonate in bulk
     Alkb = np.zeros(len(r)); Ctp=np.zeros(len(r))
     Alkp=np.zeros(len(r))
-    
+    Ptb = np.zeros(len(r))
+    Ptp = np.zeros(len(r))
+    Ntb = np.zeros(len(r))
+    Ntp = np.zeros(len(r))
     
     pressure_drop = np.zeros(len(r));   Fd = np.zeros(len(r)); U = np.zeros(len(r))
     Re_c = np.zeros(len(r));    Sh = np.zeros(len(r)); pH_b = np.zeros(len(r))    
     pH_m = np.zeros(len(r));    pH_p=np.zeros(len(r)); CO2_b=np.zeros(len(r))    
     HCO3_b=np.zeros(len(r));    CO3_b=np.zeros(len(r)); Theta=np.zeros(len(r))     
     w_H_eff=np.zeros(len(r));   w_OH_eff=np.zeros(len(r))
-    
+
+    #Phosphate Species
+    HPO4_2_b = np.zeros(len(r))
+    HPO4_2_p = np.zeros(len(r))
+    PO4_3_b = np.zeros(len(r))
+    PO4_3_p = np.zeros(len(r))
+    H2PO4_b = np.zeros(len(r))
+    H2PO4_p = np.zeros(len(r))
+    H3PO4_b = np.zeros(len(r))
+    H3PO4_p = np.zeros(len(r))
+
+    #Ammonium Species
+    NH4_b = np.zeros(len(r))
+    NH4_p = np.zeros(len(r))
+    NH3_b = np.zeros(len(r))
+    NH3_p = np.zeros(len(r))
+
+
     """Get constants from standard test conditions"""
     NaClp = NaCl_std * (1 - Rej_NaCl / 100)
     Jw_avg = Qw / ( A * 24 * 3600)
@@ -99,28 +119,19 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
     Pw4 = Pw_std if Pw4 == 0 else Pw4       
     Ps4 = Ps_std if Ps4 == 0 else Ps4
 
-    """ Recovery rates"""
-    first_stage = int(len(r) * 0.495 / 0.98) 
-    second_stage = int(len(r) * (0.74) / 0.98)
-    third_stage = int(len(r) * (0.86) / 0.98)
-    fourth_stage = int(len(r) * (0.93) / 0.98)
-    fifth_stage = int(len(r) * (0.97) / 0.98)
 
-    
     """Temperature corrections for permeability constants"""
-    Pw= Pw1*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps= Ps1*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
-
-    Pw= Pw2*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps= Ps2*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
-
-    Pw= Pw3*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps= Ps3*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
-
-    Pw= Pw4*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
-    Ps= Ps4*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw1= Pw1*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps1= Ps1*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw2= Pw2*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps2= Ps2*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw3= Pw3*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps3= Ps3*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
+    Pw4= Pw4*exp(0.0093*(T - 298.15))  #Taniguchi et al. 2001
+    Ps4= Ps4*exp(0.0483*(T - 298.15))  #Taniguchi et al. 2001
 
     # """Pw=Pw0*exp(2640*(1/T-1/298.15))  #alternative ROSA equation"""
+
     Feed  = """
             SOLUTION 1 effluent
             units     mol/l
@@ -133,24 +144,31 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             Ca       %e
             S(6)     %e
             Alkalinity       %e
+            P        %f mg/l
+            N        %f mg/l
             USE solution 1
             USER_PUNCH
             -headings ALK Ct RHO  
             -start           
             10 PUNCH ALK
             20 PUNCH TOT("C")
-            30 PUNCH RHO
+            30 PUNCH TOT("P")
+            40 PUNCH TOT("N")
+            50 PUNCH RHO
              -end
             SELECTED_OUTPUT
             -reset          false
             -user_punch     true
-            END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Alk_feed)
+            END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Alk_feed,Pt_feed,Nt_feed)
     sol_feed = phreecalc(Feed)
     #print(sol_feed)
-    rho= sol_feed[1][2]
     Alkb[0]=sol_feed[1][0] #/((1+S0/1000)/(rho/1000))
     Ctb[0]=sol_feed[1][1] #/((1+S0/1000)/(rho/1000))
-    
+    Ptb[0]= sol_feed[1][2]
+    Ntb[0]= sol_feed[1][3]
+    rho= sol_feed[1][4]
+    #print(Ctb[0]) 
+    #= 0.001543053865 
 
     
     
@@ -202,7 +220,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
                 REACTION_PRESSURE 1
                 %f
                 USER_PUNCH
-                -headings RHO osmotic_coefficient ALK Ct  
+                -headings RHO osmotic_coefficient ALK Ct Pt 
                 -start
                 10 PUNCH RHO
                 20 PUNCH OSMOTIC
@@ -285,7 +303,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [0.67, 0.37, 2.58, 7.0 ]
-        pressure_boost = [0.7, 0.27, 0.9, 3.3 ]
+        pressure_boost = [0.8, 2.6, 1.03, 0.06 ]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -354,7 +372,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
         second_stage_Avg_flux = (sum(Jw[first_stage + 1:second_stage + 1]) / (second_stage - first_stage)) * 3600000
         third_stage_Avg_flux = (sum(Jw[second_stage + 1:third_stage + 1]) / (third_stage - second_stage)) * 3600000 
         fourth_stage_Avg_flux = (sum(Jw[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) * 3600000
-        fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (fifth_stage - fourth_stage)) * 3600000  
+        fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (fifth_stage - fourth_stage + 1)) * 3600000  
         
         """Specific Energy Consumption """
         SEC_1 = ((1 - r[0])/r[-1]) * (Pbar[i] * 0.02778)
@@ -368,7 +386,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
 
     
         #print(r[i])
-        """Reactive transport model"""
+
     for i in range(len(r) - 1):
 
         bulk_speciation = """
@@ -381,8 +399,10 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             Na          %e 
             Mg          %e 
             K           %e 
-            Ca          %e 
+            Ca          %e
+            P           %e 
             C           %e
+            N           %e
             Alkalinity    %e 
             USE solution 1
             REACTION_PRESSURE 1
@@ -391,18 +411,28 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             -reset    false
             -high_precision     true
             -ph       true
-            -molalities      HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4-  MgCO3
-             END"""%(t,7.0,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ctb[i],Alkb[i],Pbar[i])
+            -molalities    PO4-3  HPO4-2  H2PO4-  H3PO4  HCO3-  CO2  CO3-2  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  MgPO4-  NH4SO4-
+             END"""%(t,7.0,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ptb[i],Ctb[i],Ntb[i],Alkb[i],Pbar[i])
         
         sol=phreecalc(bulk_speciation)
         #print(sol)
-
-        pH_b[i]=sol[2][0];  HCO3_b[i]=sol[2][1];  CO2_b[i]=sol[2][2]
-        OH_b=sol[2][4]; H_b=sol[2][5]; MgOH_b=sol[2][6]; HSO4_b = sol[2][7]; MgCO3_b = sol[2][8]
+        pH_b[i]=sol[2][0];  HPO4_2_b[i] = sol[2][2];  H2PO4_b[i] = sol[2][3]; H3PO4_b[i] =sol[2][4]
+        HCO3_b[i]=sol[2][5];  CO2_b[i]=sol[2][6]
+        NH3_b[i] =sol[2][9]; 
+        OH_b=sol[2][10]; H_b=sol[2][11]; MgOH_b=sol[2][12]; HSO4_b = sol[2][13]; MgCO3_b = sol[2][14]
+        MgPO4_b = sol[2][15]; NH4SO4_b =sol[2][16]
+        PO4_3_b[i] = Ptb[i] - HPO4_2_b[i] - H2PO4_b[i] - H3PO4_b[i]
         CO3_b[i] = Ctb[i] - HCO3_b[i] - CO2_b[i]
+        NH4_b[i] = Ntb[i]
    
-        #Using the solution diffusion model, transport;  HCO3, CO2
-        if i==0:            
+        #Using the solution diffusion model, transport; HPO4_2, H2PO4, H3PO4,  HCO3, CO2
+        if i==0:
+            """Phosphate system"""
+            HPO4_2_p = (Ps*HPO4_2_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Ps*exp(Jw[i]/k[i]))
+            H2PO4_p =  (Ps*H2PO4_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Ps*exp(Jw[i]/k[i])) 
+            H3PO4_p = (Pco2*H3PO4_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Pco2*exp(Jw[i]/k[i]))    #Assuming same  permeability as C02
+            Ptp[0] =  HPO4_2_p + H2PO4_p  + H3PO4_p  
+            """Carbonate system"""
             HCO3_p= (Ps*HCO3_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Ps*exp(Jw[i]/k[i]))
             CO2_p=  (Pco2 *CO2_b[0] *exp(Jw[i]/k[i]))/(Jw[0]+Pco2*exp(Jw[i]/k[i]))    # 0% rejection 
             Ctp[0]=HCO3_p+CO2_p
@@ -413,21 +443,27 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
         HSO4_m=HSO4_b*exp(Jw[i]/k[i])     
         CO3_m=CO3_b[i]*exp(Jw[i]/k[i])
         MgCO3_m = MgCO3_b*exp(Jw[i]/k[i])
+        MgPO4_m = MgPO4_b*exp(Jw[i]/k[i])
+        PO4_3_m = PO4_3_b[i]*exp(Jw[i]/k[i])
         CO2_m=CO2_b[i] 
+        H3PO4_m = H3PO4_b[i]
         pH_m_old=100; pH_m[i]=pH_b[i]; Alkm= Alkb[i]*exp(Jw[i]/k[i]); Alkm_old = 0
         kk = 0
         while(abs((pH_m[i]-pH_m_old)/pH_m[i])>0.0001)and(kk<50):
             Alkm_old = Alkm
             pH_m_old = pH_m[i]
             """Estimation of weak acid species concentration in the film layer"""
+            HPO4_2_m = HPO4_2_p + (HPO4_2_b[i] - HPO4_2_p)*exp(Jw[i]/k[i])
+            H2PO4_m = H2PO4_p + (H2PO4_b[i] - H2PO4_p)*exp(Jw[i]/k[i])
             HCO3_m=HCO3_p+(HCO3_b[i]-HCO3_p)*exp(Jw[i]/k[i])    
             OH_m = OH_p+(OH_b-OH_p)*exp(Jw[i]/(3.34*k[i]))
             H_m = H_p+(H_b-H_p)*exp(Jw[i]/(5.62*k[i])) 
 
-            """Weak acid species mass balance in the film layer"""
-            Ctm= HCO3_m + CO2_m + CO3_m
+            """Weak acid species Mass balance in the film layer"""
+            Ptm = HPO4_2_m + H2PO4_m + H3PO4_m + PO4_3_m
+            Ctm = HCO3_m + CO2_m + CO3_m
             """Alkalinity mass balance in the film layer""" 
-            Alkm= HCO3_m + 2*CO3_m + OH_m - H_m + MgOH_m - HSO4_m + 2*MgCO3_m
+            Alkm= HCO3_m + 2*CO3_m + H2PO4_m + 2* HPO4_2_m + 3*PO4_3_m + OH_m - H_m + MgOH_m - HSO4_m + 2*MgCO3_m + 3* MgPO4_m  
 
             film_speciation = """
                 SOLUTION 1 effluent
@@ -439,7 +475,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
                 Na          %e 
                 Mg          %e 
                 K           %e 
-                Ca          %e 
+                Ca          %e
+                P           %e 
                 C           %e
                 Alkalinity    %e 
                 USE solution 1
@@ -449,16 +486,21 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
                 -reset    false
                 -high_precision     true
                 -ph       true
-                -molalities      HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4-  MgCO3
-                 END"""%(t,7,CF[i]*Cl,CF[i]*SO4,CF[i]*Na,CF[i]*Mg,CF[i]*K,CF[i]*Ca,Ctm,Alkm,Pbar[i])
+                -molalities   PO4-3  HPO4-2  H2PO4-  H3PO4  HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4-  MgCO3  MgPO4-  
+                 END"""%(t,7,CF[i]*Cl,CF[i]*SO4,CF[i]*Na,CF[i]*Mg,CF[i]*K,CF[i]*Ca,Ptm,Ctm,Alkm,Pbar[i])
             
             sol=phreecalc(film_speciation)
             #print(sol)
-            pH_m[i]=sol[2][0]; HCO3_m=sol[2][1]; CO2_m=sol[2][2]
-            OH_m = sol[2][4]; H_m = sol[2][5];  MgOH_m=sol[2][6]; HSO4_m = sol[2][7] #; MgCO3_m = sol[2][8]
-            CO3_m = Ctm - HCO3_m - CO2_m #; MgCO3_m = sol[2][10]
+            pH_m[i]=sol[2][0]; HPO4_2_m = sol[2][2]; H2PO4_m = sol[2][3]; H3PO4_m = sol[2][4]
+            HCO3_m=sol[2][5]; CO2_m=sol[2][6]
+            OH_m = sol[2][8]; H_m = sol[2][9];  MgOH_m=sol[2][10]; HSO4_m = sol[2][11]; MgPO4_m =sol[2][12]
+            CO3_m = Ctm - HCO3_m - CO2_m 
+            PO4_3_m = Ptb[i] - HPO4_2_m - H2PO4_m - H3PO4_m
 
-            """Permeate concentrations of carbonate species"""
+            """Permeate concentrations of carbonate and phosphate species"""
+            HPO4_2_p =(Ps*HPO4_2_m)/(Jw[i]+Ps)
+            H2PO4_p = (Ps*H2PO4_m)/(Jw[i]+Ps)
+            H3PO4_p= (Pco2*H3PO4_m)/(Jw[i]+Pco2)
             HCO3_p= (Ps*HCO3_m)/(Jw[i]+Ps)
             CO2_p= (Pco2*CO2_m)/(Jw[i]+Pco2)
 
@@ -483,8 +525,9 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
 
             H_p = a2/(b2+c2)
 
-            Ctp[i]=HCO3_p+CO2_p     #Weak-acid species mass balance in the permeate
-            Alkp[i]=HCO3_p + OH_p - H_p     #Alkalinity mass balance in the permeate
+            Ctp[i] = HCO3_p+CO2_p     #Weak-acid species mass balance in the permeate
+            Ptp[i] = HPO4_2_p + H2PO4_p + H3PO4_p 
+            Alkp[i]= H2PO4_p + 2* HPO4_2_p+ HCO3_p + OH_p - H_p     #Alkalinity mass balance in the permeate
 
 
         permeate_speciation = """
@@ -493,22 +536,24 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             temp          %f
             pH            %f
             Na            %e 
-            Cl            %e 
+            Cl            %e
+            P             %e 
             C             %e 
             Alkalinity    %e
             USE solution 1
             SELECTED_OUTPUT
             -reset    false
             -ph       true
-            -molalities      HCO3-  CO2  OH-  H+ CO3-2
-             END"""%(t,7,Cp[i]/2,Cp[i]/2,Ctp[i],Alkp[i])
+            -molalities     PO4-3  HPO4-2  H2PO4-  H3PO4  HCO3-  CO2  OH-  H+ CO3-2
+             END"""%(t,7,Cp[i]/2,Cp[i]/2,Ptp[i],Ctp[i],Alkp[i])
         
         sol=phreecalc(permeate_speciation)
         #print(sol)
-        pH_p[i]=sol[1][0]; HCO3_p=sol[1][1]; CO2_p=sol[1][2]; OH_p=sol[1][3]; H_p=sol[1][4]
-        CO3_p = sol[1][5]
+        pH_p[i]=sol[1][0]; PO4_3_p =sol[1][1]; HPO4_2_p = sol[1][2];  H2PO4_p = sol[1][3]; H3PO4_p =sol[1][4]; 
+        HCO3_p=sol[1][5]; CO2_p=sol[1][6]; OH_p=sol[1][7]; H_p=sol[1][8]; CO3_p = sol[1][9]
 
         """Carbonate and alkalinity mass balance"""
+        Ptb[i+1] = (Ptb[i]*(1-r[i]) - dr*Ptp[i])/(1-r[i+1])
         Ctb[i+1] = (Ctb[i]*(1-r[i]) - dr*Ctp[i])/(1-r[i+1])
         Alkb[i+1] = (Alkb[i]*(1-r[i]) - dr*Alkp[i])/(1-r[i+1])
                         
@@ -526,7 +571,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             Na          %e 
             Mg          %e 
             K           %e 
-            Ca          %e 
+            Ca          %e
+            P           %e 
             C           %e 
             Alkalinity    %e
             USE solution 1
@@ -536,13 +582,14 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Re
             -reset    false
             -high_precision     true
             -ph       true
-            -molalities      HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4- MgCO3
+            -molalities      HPO4-2  PO4-3  H2PO4-  H3PO4  HCO3-  CO2  CO3-2  OH-  H+  MgOH+  HSO4-  MgCO3  MgPO4-
             -totals               Ca
-            -saturation_indices   Aragonite
-            -equilibrium_phases   Aragonite
+            -saturation_indices   Aragonite  Gypsum
+            -equilibrium_phases   Aragonite  Gypsum
             EQUILIBRIUM_PHASES 1
                 Aragonite 0 0
-            END"""%(t,7,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ctb[i],Alkb[i],Pbar[i])
+                Gypsum    0 0
+            END"""%(t,7,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ptb[i],Ctb[i],Alkb[i],Pbar[i])
         
     return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp
 
