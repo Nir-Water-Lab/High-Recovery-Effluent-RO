@@ -10,8 +10,12 @@ start_time = time.time()
 
 
 """Enter major ions concentrations in mol/l"""
-Ca = 0.001;		K = 0.00060;	#P = 0.00007
-Mg = 0.00035; Na = 0.00593;	SO4 = 0.00089; Cl = 0.00593
+mw_Na = 22989.77; mw_Mg = 24305; mw_Ca = 40078 ; mw_Cl = 35453
+mw_P = 30974; mw_Si = 28086; mw_K = 39098; mw_SO4 = 96062.6; mw_Fe = 55845
+
+Ca = 42.9/mw_Ca;	Cl = 118.5/mw_Cl; K = 26.33/mw_K;	P = 10.65/mw_P
+Mg = 5.86/mw_Mg; Na = 126.1/mw_Na;	Fe = 0.5/mw_Fe 
+SO4 = 3.14/mw_SO4; 
 
 """Enter acid-base parameters"""
 """
@@ -20,11 +24,10 @@ feed_pH : pH, feed (float)
 Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
-feed_pH = 8.0 # Enter pH 
-Ct_feed = 4.0 #Enter total inorganic carbon (mg/l)
-Pt_feed = 2.18 #Enter total inorganic phosphate (mg/l)
-Nt_feed = 1.18 #mg/l
-Alk_feed = 0.000224
+feed_pH = 7.17 # Enter pH 
+Ct_feed = 0.0153 #Enter total inorganic carbon (mol/l)
+Nt_feed = 146.4 #mg/l
+Alk_feed = 0.0156   #eq/L ignored
 
 """Enter process operational conditions"""
 """
@@ -35,7 +38,7 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 3.1 #Enter Pressure (bars) 
+P_feed = 3.6 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 #u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 98.0 #Enter Recovey Ratio (%)
@@ -68,13 +71,14 @@ kb : Average mass transfer for uncharged (float)
 """
 # #1.084e-6 #5.793e-7 #1.084e-6 #Enter water permeabiliy (if unavailable enter 0 - value will be derived from manufacturer data)
 # #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
-ks = 0 #2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
+ks = 0 #2.32e-5 #2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
+kt = 0
 Pw1, Ps1 = 2.05e-6, 2.439e-8   #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
 Pw2, Ps2 = 1.817e-6, 2.56e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
 Pw3, Ps3 = 1.208e-6, 2.414e-8 #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
 Pw4, Ps4 = 1.222e-6, 2.533e-8 #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
 Pco2 = 1.5e-1 #Assumed
-Pp = 0
+Pp = 1.0e-3
  
 """Enter manufacturer results from standard test conditions for estimating missing membrane constants"""
 """
@@ -98,8 +102,8 @@ Rej_NaCl = 99.5 #Enter NaCl rejection at standard test conditions (%)
 d_mil = 28.0 #enter feed spacer height (mil)
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, SEC_1, SEC_2, SEC_3, SEC_4, SEC_5, Total_SEC, rho, k, pressure_drop, Mcp, U,
- pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp)=Effluent(Ca, K, Mg, Na, Cl,SO4, P_feed,t,recovery, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pp,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Pt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage, fifth_stage)
+(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux,
+ pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pp,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage, fifth_stage)
  
 import xlsxwriter
 # Create folder
@@ -126,8 +130,8 @@ col = 0
 r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
-headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)', 'SEC_1 (kWh/m3)', 'SEC_2 (kWh/m3)', 'SEC_3 (kWh/m3)', 'SEC_4 (kWh/m3)', 'SEC_5 (kWh/m3)', 'Total_SEC (kWh/m3)','Density','Mass transfer',
-           ' Pressure drop Corr','Cross-flow Velocity','Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. in Brine','Trace Conc. in Permeate']
+headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)',
+           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl']
 #, , 
 
 for i, header in enumerate(headers):
@@ -148,25 +152,18 @@ for i in range(len(r)):
     worksheet.write(1, 9, fourth_stage_Avg_flux)
     worksheet.write(1, 10, fifth_stage_Avg_flux)
 
-    
-    
-    worksheet.write(1, 11, SEC_1)
-    worksheet.write(1, 12, SEC_2)
-    worksheet.write(1, 13, SEC_3)
-    worksheet.write(1, 14, SEC_4)
-    worksheet.write(1, 15, SEC_5)
-    worksheet.write(1, 16, Total_SEC)
-    worksheet.write(1,17,rho)
-    worksheet.write(row,18, k[i])
-    worksheet.write(row, 19, pressure_drop[i])
-    worksheet.write(row,20, U[i])
-    worksheet.write(row,21, pH_b[i])
-    worksheet.write(row,22, pH_p[i])
-    worksheet.write(row,23, pH_m[i])
-    worksheet.write(row,24, Alkb[i]) 
-    worksheet.write(row,25, Alkp[i]) 
-    worksheet.write(row,26, Ctb[i])
-    worksheet.write(row,27, Ctp[i])           
+    worksheet.write(row,11, pH_b[i])
+    worksheet.write(row,12, pH_p[i])
+    worksheet.write(row,13, pH_m[i])
+    worksheet.write(row,14, Alkb[i]) 
+    worksheet.write(row,15, Alkp[i]) 
+    worksheet.write(row,16, Ctb[i])
+    worksheet.write(row,17, Ctp[i]) 
+    worksheet.write(row,18, Ptb[i])
+    worksheet.write(row,19, Ptp[i]) 
+    worksheet.write(row,20, Ntb[i]) 
+    worksheet.write(row,21,Ntp[i])
+    worksheet.write(row,22,Ntp_Accum_mgl[i])          
     #worksheet.write(row, 25, l[i])
     
     

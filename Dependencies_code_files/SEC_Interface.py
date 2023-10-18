@@ -122,7 +122,7 @@ r = np.linspace(0, int(recovery), int(recovery + 1))
 
 #write data to worksheet
 headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)', 'SEC_1 (kWh/m3)', 'SEC_2 (kWh/m3)', 'SEC_3 (kWh/m3)', 'SEC_4 (kWh/m3)', 'SEC_5 (kWh/m3)', 'Total_SEC (kWh/m3)',
-           'Density','Mass transfer',' Pressure drop Corr','Cross-flow Velocity','osmotic_pressure'] #
+           'Density','Mass transfer',' Pressure drop Corr','Cross-flow Velocity','osmotic_pressure'] 
 
 for i, header in enumerate(headers):
     worksheet.write(0, i, header)
