@@ -518,7 +518,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Ntm = NH4_m + NH3_m 
             #print(HPO4_2_m, H2PO4_m, H3PO4_m, PO4_3_m)
             """Alkalinity mass balance in the film layer""" 
-            Alkm= HCO3_m + (2*CO3_m) - H3PO4_m +  HPO4_2_m + (2 * PO4_3_m) + NH3_m +  OH_m - H_m #+ MgOH_m - HSO4_m #+ 2*MgCO3_m + 3* MgPO4_m  
+            Alkm= HCO3_m + (2*CO3_m) - H3PO4_m +  HPO4_2_m + (2 * PO4_3_m) + NH3_m +  OH_m - H_m   
             #print(Alkm)
             film_speciation = """
                 SOLUTION 1 effluent
