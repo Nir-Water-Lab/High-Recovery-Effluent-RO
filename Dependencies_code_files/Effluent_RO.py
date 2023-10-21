@@ -1,4 +1,4 @@
-def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pp,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage, fifth_stage):
+def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pp,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage):
      
     # Import standard library modules first.
     #import sys
@@ -308,7 +308,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             u2 = (U[51] + U[74])/2
             u3 = (U[75] + U[86])/2
             u4 = (U[87] + U[93])/2
-            u5 = (U[94] + U[98])/2      
+            #u5 = (U[94] + U[98])/2      
             #Fd[i]= (6.23*Re_c[i])**-0.3         #friction_factor Boram Gu et al
             Fd[i] = (100*Re_c[i])**-0.25              #friction_factor Blasuis et al
 
@@ -322,10 +322,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                 pressure_drop[i] = (Fd[i]*rho * (u2*u2)*L)/2*d
             elif second_stage < i <= third_stage:
                 pressure_drop[i] = (Fd[i]*rho * (u3*u3)*L)/2*d
-            elif third_stage < i <= fourth_stage:
-                pressure_drop[i] = (Fd[i]*rho * (u4*u4)*L)/2*d
             else:
-                pressure_drop[i] = (Fd[i]*rho * (u5*u5)*L)/2*d
+                pressure_drop[i] = (Fd[i]*rho * (u4*u4)*L)/2*d
 
             
             ## Concentration Polarization Modulus
@@ -398,7 +396,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         second_stage_Avg_flux = (sum(Jw[first_stage + 1:second_stage + 1]) / (second_stage - first_stage)) * 3600000
         third_stage_Avg_flux = (sum(Jw[second_stage + 1:third_stage + 1]) / (third_stage - second_stage)) * 3600000 
         fourth_stage_Avg_flux = (sum(Jw[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) * 3600000
-        fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (fifth_stage - fourth_stage + 1)) * 3600000  
+        #fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (fifth_stage - fourth_stage + 1)) * 3600000  
         
         # """Specific Energy Consumption """
         # SEC_1 = ((1 - r[0])/r[-1]) * (Pbar[i] * 0.02778)
@@ -493,17 +491,12 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Ntp[0] = NH4_p + NH3_p
             Ntp_Accum[0] = Ntp[0]
 
-        OH_p = OH_bt
-        H_p = H_bt
-
-        # MgOH_m=MgOH_b*exp(Jw[i]/k[i])
-        # HSO4_m=HSO4_b*exp(Jw[i]/k[i])     
+            OH_p = 0
+            H_p = 0
+    
         CO3_m=CO3_b[i]*exp(Jw[i]/k[i])
-        # MgCO3_m = MgCO3_b*exp(Jw[i]/k[i])
-        
         PO4_3_m = PO4_3_b[i]*exp(Jw[i]/k[i])
         HPO4_2_m = HPO4_2_bt[i]*exp(Jw[i]/k[i])
-        #NH4SO4_m = NH4SO4_b*exp(Jw[i]/k[i])
         CO2_m = CO2_b[i] 
         H3PO4_m = H3PO4_b[i]
         NH3_m = NH3_bt[i]
@@ -621,7 +614,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Ctp[i] = HCO3_p + H2CO3_p     #Weak-acid species mass balance in the permeate
             Ptp[i] = H2PO4_p + H3PO4_p
             Ntp[i] = NH4_p + NH3_p
-            Alkp[i]= HCO3_p + H2PO4_p + NH3_p + OH_p - H_p     #Alkalinity mass balance in the permeate
+            Alkp[i]= HCO3_p - H3PO4_p + NH3_p + OH_p - H_p     #Alkalinity mass balance in the permeate
 
 
         permeate_speciation = """
@@ -699,7 +692,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                 Aragonite 0 0
             END"""%(t,7,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
         
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl
 
     
 

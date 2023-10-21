@@ -41,12 +41,11 @@ pressure_drop : total pressure drop (float)
 P_feed = 3.6 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 #u0 = 0.17 #Enter feed cross-flow velocity (m/s)
-recovery = 98.0 #Enter Recovey Ratio (%)
-first_stage = 50
-second_stage = 74
-third_stage = 86
-fourth_stage = 93 
-fifth_stage = 97
+recovery = 95.0 #Enter Recovey Ratio (%)
+first_stage = 45
+second_stage =  70
+third_stage = 80
+fourth_stage = 95
 #pressure_drop = 0.3 #Enter total pressure drop (bars)
 
 ## Viscosity Parameters
@@ -102,8 +101,8 @@ Rej_NaCl = 99.5 #Enter NaCl rejection at standard test conditions (%)
 d_mil = 28.0 #enter feed spacer height (mil)
 
 """The call for the function"""
-(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, fifth_stage_Avg_flux,
- pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pp,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage, fifth_stage)
+(r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux,
+ pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pp,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage)
  
 import xlsxwriter
 # Create folder
@@ -130,7 +129,7 @@ col = 0
 r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
-headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)', 'fifth_stage_Avg_flux(LMH)',
+headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)',
            'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl']
 #, , 
 
@@ -150,20 +149,20 @@ for i in range(len(r)):
     worksheet.write(1, 7, second_stage_Avg_flux)
     worksheet.write(1, 8, third_stage_Avg_flux)
     worksheet.write(1, 9, fourth_stage_Avg_flux)
-    worksheet.write(1, 10, fifth_stage_Avg_flux)
+    #worksheet.write(1, 10, fifth_stage_Avg_flux)
 
-    worksheet.write(row,11, pH_b[i])
-    worksheet.write(row,12, pH_p[i])
-    worksheet.write(row,13, pH_m[i])
-    worksheet.write(row,14, Alkb[i]) 
-    worksheet.write(row,15, Alkp[i]) 
-    worksheet.write(row,16, Ctb[i])
-    worksheet.write(row,17, Ctp[i]) 
-    worksheet.write(row,18, Ptb[i])
-    worksheet.write(row,19, Ptp[i]) 
-    worksheet.write(row,20, Ntb[i]) 
-    worksheet.write(row,21,Ntp[i])
-    worksheet.write(row,22,Ntp_Accum_mgl[i])          
+    worksheet.write(row,10, pH_b[i])
+    worksheet.write(row,11, pH_p[i])
+    worksheet.write(row,12, pH_m[i])
+    worksheet.write(row,13, Alkb[i]) 
+    worksheet.write(row,14, Alkp[i]) 
+    worksheet.write(row,15, Ctb[i])
+    worksheet.write(row,16, Ctp[i]) 
+    worksheet.write(row,17, Ptb[i])
+    worksheet.write(row,18, Ptp[i]) 
+    worksheet.write(row,19, Ntb[i]) 
+    worksheet.write(row,20,Ntp[i])
+    worksheet.write(row,21,Ntp_Accum_mgl[i])          
     #worksheet.write(row, 25, l[i])
     
     
