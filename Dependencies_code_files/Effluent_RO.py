@@ -500,121 +500,121 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         CO2_m = CO2_b[i] 
         H3PO4_m = H3PO4_b[i]
         NH3_m = NH3_bt[i]
-        pH_m_old=100; pH_m[i]=pH_b[i]; Alkm= Alkb[i]*exp(Jw[i]/k[i]); Alkm_old = 0
-        kk = 0
-        while(abs((pH_m[i]-pH_m_old)/pH_m[i])>0.0001)and(kk<50):
-            Alkm_old = Alkm
-            pH_m_old = pH_m[i]
-            """Estimation of weak acid species concentration in the film layer"""
-            HCO3_m=HCO3_p+(HCO3_bt[i]-HCO3_p)*exp(Jw[i]/k[i]) 
-            H2PO4_m = H2PO4_p + (H2PO4_bt[i] - H2PO4_p)*exp(Jw[i]/k[i])
-            NH4_m = NH4_p + (NH4_b[i] - NH4_p)*exp(Jw[i]/k[i])
-            OH_m = OH_p+(OH_bt-OH_p)*exp(Jw[i]/(3.34*k[i]))   ## ?????
-            H_m = H_p+(H_bt-H_p)*exp(Jw[i]/(5.62*k[i])) 
+        #pH_m_old=100; pH_m[i]=pH_b[i]; Alkm= Alkb[i]*exp(Jw[i]/k[i]); Alkm_old = 0
+        #kk = 0
+        # while(abs((pH_m[i]-pH_m_old)/pH_m[i])>0.0001)and(kk<50):
+            # Alkm_old = Alkm
+            # pH_m_old = pH_m[i]
+        """Estimation of weak acid species concentration in the film layer"""
+        HCO3_m=HCO3_p+(HCO3_bt[i]-HCO3_p)*exp(Jw[i]/k[i]) 
+        H2PO4_m = H2PO4_p + (H2PO4_bt[i] - H2PO4_p)*exp(Jw[i]/k[i])
+        NH4_m = NH4_p + (NH4_b[i] - NH4_p)*exp(Jw[i]/k[i])
+        OH_m = OH_p+(OH_bt-OH_p)*exp(Jw[i]/(3.34*k[i]))   ## ?????
+        H_m = H_p+(H_bt-H_p)*exp(Jw[i]/(5.62*k[i])) 
 
-            """Weak acid species Mass balance in the film layer"""
-            Ctm = CO3_m + HCO3_m + CO2_m 
-            Ptm = PO4_3_m + HPO4_2_m+ H2PO4_m + H3PO4_m
-            Ntm = NH4_m + NH3_m 
-            #print(HPO4_2_m, H2PO4_m, H3PO4_m, PO4_3_m)
-            """Alkalinity mass balance in the film layer""" 
-            Alkm= HCO3_m + (2*CO3_m) - H3PO4_m +  HPO4_2_m + (2 * PO4_3_m) + NH3_m +  OH_m - H_m   
-            #print(Alkm)
-            film_speciation = """
-                SOLUTION 1 effluent
-                units     mol/kgw
-                temp        %f
-                pH          %f
-                Cl          %e
-                S(6)        %e   
-                Na          %e 
-                Mg          %e 
-                K           %e 
-                Ca          %e
-                Fe          %e
-                C(4)        %e
-                P           %e
-                N(-3)       %e
-                Alkalinity    %e 
-                USE solution 1
-                REACTION_PRESSURE 1
-                %f
-                SELECTED_OUTPUT
-                -reset    false
-                -high_precision     true
-                -ph       true
-                -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
-                    CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4  
-                 END"""%(t,7,CF[i]*Cl,CF[i]*SO4,CF[i]*Na,CF[i]*Mg,CF[i]*K,CF[i]*Ca,CF[i]*Fe,Ctm,Ptm,Ntm,Alkm,Pbar[i])
+        """Weak acid species Mass balance in the film layer"""
+        Ctm = CO3_m + HCO3_m + CO2_m 
+        Ptm = PO4_3_m + HPO4_2_m+ H2PO4_m + H3PO4_m
+        Ntm = NH4_m + NH3_m 
+        #print(HPO4_2_m, H2PO4_m, H3PO4_m, PO4_3_m)
+        """Alkalinity mass balance in the film layer""" 
+        Alkm= HCO3_m + (2*CO3_m) - H3PO4_m +  HPO4_2_m + (2 * PO4_3_m) + NH3_m +  OH_m - H_m   
+        #print(Alkm)
+        film_speciation = """
+            SOLUTION 1 effluent
+            units     mol/kgw
+            temp        %f
+            pH          %f
+            Cl          %e
+            S(6)        %e   
+            Na          %e 
+            Mg          %e 
+            K           %e 
+            Ca          %e
+            Fe          %e
+            C(4)        %e
+            P           %e
+            N(-3)       %e
+            Alkalinity    %e 
+            USE solution 1
+            REACTION_PRESSURE 1
+            %f
+            SELECTED_OUTPUT
+            -reset    false
+            -high_precision     true
+            -ph       true
+            -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
+                CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4  
+            END"""%(t,7,CF[i]*Cl,CF[i]*SO4,CF[i]*Na,CF[i]*Mg,CF[i]*K,CF[i]*Ca,CF[i]*Fe,Ctm,Ptm,Ntm,Alkm,Pbar[i])
             
             
-            sol_film_sit, sol_film_minteq = phreecalc(film_speciation)
-            #print(sol_film_minteq)
-            pH_m[i]=sol_film_minteq[2][0];  
-            HCO3_m=sol_film_minteq[2][1];  H2CO3_m = sol_film_minteq[2][2] ; #CO3_m[i] = sol_film_minteq[2][3]
-            HPO4_2_m = sol_film_minteq[2][5];  H2PO4_m = sol_film_minteq[2][6]; H3PO4_m =sol_film_minteq[2][7]
-            #print(pH_b)
-            NH3_m = sol_film_minteq[2][9]
-            OH_m=sol_film_minteq[2][10]; H_m=sol_film_minteq[2][11]; MgOH_m=sol_film_minteq[2][12]; HSO4_m = sol_film_minteq[2][13]; MgCO3_m = sol_film_minteq[2][14]
-            MgPO4_m =sol_film_minteq[2][15]; CaHCO3_m = sol_film_minteq[2][16]; NaHCO3_m = sol_film_minteq[2][17]; CaCO3_m = sol_film_minteq[2][18]; MgHCO3_m = sol_film_minteq[2][19]; 
-            NaCO3_m = sol_film_minteq[2][20];   FeHCO3_m = sol_film_minteq[2][21]
-            CaHPO4_m =sol_film_minteq[2][22]  ; FeHPO4_m =sol_film_minteq[2][23] ; KHPO4_m = sol_film_minteq[2][24] ; MgHPO4_m = sol_film_minteq[2][25] ; NaHPO4_m = sol_film_minteq[2][26]; FeHPO4_m1 = sol_film_minteq[2][27]
-            CaH2PO4_m = sol_film_minteq[2][28]; FeH2PO4_m = sol_film_minteq[2][29]; FeH2PO42_m = sol_film_minteq[2][30];  MgH2PO4_m = sol_film_minteq[2][31]
-            CaNH3_2m = sol_film_minteq[2][32]; CaNH322_m = sol_film_minteq[2][33]
-            CaOH_m = sol_film_minteq[2][34];  FeOH_m = sol_film_minteq[2][35]; Fe_OH_2m = sol_film_minteq[2][36]; Fe_OH_3_m = sol_film_minteq[2][37];  Fe_OH_4_m = sol_film_minteq[2][38];  FeOH_2m = sol_film_minteq[2][39];  Fe2_OH_2_4m = sol_film_minteq[2][40] 
+        sol_film_sit, sol_film_minteq = phreecalc(film_speciation)
+        #print(sol_film_minteq)
+        pH_m[i]=sol_film_minteq[2][0];  
+        HCO3_m=sol_film_minteq[2][1];  H2CO3_m = sol_film_minteq[2][2] ; #CO3_m[i] = sol_film_minteq[2][3]
+        HPO4_2_m = sol_film_minteq[2][5];  H2PO4_m = sol_film_minteq[2][6]; H3PO4_m =sol_film_minteq[2][7]
+        #print(pH_b)
+        NH3_m = sol_film_minteq[2][9]
+        OH_m=sol_film_minteq[2][10]; H_m=sol_film_minteq[2][11]; MgOH_m=sol_film_minteq[2][12]; HSO4_m = sol_film_minteq[2][13]; MgCO3_m = sol_film_minteq[2][14]
+        MgPO4_m =sol_film_minteq[2][15]; CaHCO3_m = sol_film_minteq[2][16]; NaHCO3_m = sol_film_minteq[2][17]; CaCO3_m = sol_film_minteq[2][18]; MgHCO3_m = sol_film_minteq[2][19]; 
+        NaCO3_m = sol_film_minteq[2][20];   FeHCO3_m = sol_film_minteq[2][21]
+        CaHPO4_m =sol_film_minteq[2][22]  ; FeHPO4_m =sol_film_minteq[2][23] ; KHPO4_m = sol_film_minteq[2][24] ; MgHPO4_m = sol_film_minteq[2][25] ; NaHPO4_m = sol_film_minteq[2][26]; FeHPO4_m1 = sol_film_minteq[2][27]
+        CaH2PO4_m = sol_film_minteq[2][28]; FeH2PO4_m = sol_film_minteq[2][29]; FeH2PO42_m = sol_film_minteq[2][30];  MgH2PO4_m = sol_film_minteq[2][31]
+        CaNH3_2m = sol_film_minteq[2][32]; CaNH322_m = sol_film_minteq[2][33]
+        CaOH_m = sol_film_minteq[2][34];  FeOH_m = sol_film_minteq[2][35]; Fe_OH_2m = sol_film_minteq[2][36]; Fe_OH_3_m = sol_film_minteq[2][37];  Fe_OH_4_m = sol_film_minteq[2][38];  FeOH_2m = sol_film_minteq[2][39];  Fe2_OH_2_4m = sol_film_minteq[2][40] 
             
-            """ Summing Ion-pairs"""
-            "Summing Ion-pairs"
-            OH_mt = OH_m + MgOH_m + CaOH_m + FeOH_m + Fe_OH_2m + Fe_OH_3_m + Fe_OH_4_m + FeOH_2m + Fe2_OH_2_4m
-            H_mt = H_m + HSO4_m 
-            HCO3_mt = HCO3_m + CaHCO3_m + NaHCO3_m + MgHCO3_m + FeHCO3_m 
-            CO3_m = Ctm - HCO3_mt - H2CO3_m
-            HPO4_2_mt = HPO4_2_m +  CaHPO4_m + FeHPO4_m + KHPO4_m + MgHPO4_m +  NaHPO4_m + FeHPO4_m1
-            H2PO4_mt = H2PO4_m + CaH2PO4_m +  FeH2PO4_m +  FeH2PO42_m +   MgH2PO4_m  
-            PO4_3_m = Ptm - HPO4_2_mt - H2PO4_mt - H3PO4_m
-            NH3_mt = NH3_m + CaNH3_2m + CaNH322_m
-            NH4_m = Ntm - NH3_mt
-            
-
-            """Permeate concentrations of Ammonium, carbonate and phosphate species"""
-            HCO3_p= (Ps*HCO3_mt)/(Jw[i]+Ps)
-            #CO2_p= (Pco2*CO2_m)/(Jw[i]+Pco2)
-            H2PO4_p = (Ps*H2PO4_mt)/(Jw[i]+Ps)
-            NH4_p = (Ps*NH4_m)/(Jw[i]+Ps)
-            kk=kk+1
-            H2CO3_p = (Pco2*H2CO3_m)/(Jw[i]+Pco2)
-            H3PO4_p = (Pco2*H3PO4_m)/(Jw[i]+Pco2)
-            NH3_p = (Pco2*NH3_mt)/(Jw[i]+Pco2)
-            # H2CO3_p = H2CO3_m
-            # H3PO4_p = H3PO4_m
-            # NH3_p = NH3_m
+        """ Summing Ion-pairs"""
+        "Summing Ion-pairs"
+        OH_mt = OH_m + MgOH_m + CaOH_m + FeOH_m + Fe_OH_2m + Fe_OH_3_m + Fe_OH_4_m + FeOH_2m + Fe2_OH_2_4m
+        H_mt = H_m + HSO4_m 
+        HCO3_mt = HCO3_m + CaHCO3_m + NaHCO3_m + MgHCO3_m + FeHCO3_m 
+        CO3_m = Ctm - HCO3_mt - H2CO3_m
+        HPO4_2_mt = HPO4_2_m +  CaHPO4_m + FeHPO4_m + KHPO4_m + MgHPO4_m +  NaHPO4_m + FeHPO4_m1
+        H2PO4_mt = H2PO4_m + CaH2PO4_m +  FeH2PO4_m +  FeH2PO42_m +   MgH2PO4_m  
+        PO4_3_m = Ptm - HPO4_2_mt - H2PO4_mt - H3PO4_m
+        NH3_mt = NH3_m + CaNH3_2m + CaNH322_m
+        NH4_m = Ntm - NH3_mt
             
 
-            kk=kk+1
-            """Permeation of alkalinity due to H+/OH- diffusion-electromigration"""
-            k_Cb = 0.357/(1+exp(-52.63022629*(Cm[i]-0.12)))        
-            Theta[i] = (1-k_Cb-0.05713078)/(1+exp(-1.72843187*(pH_m[i]-7))) + 0.05713078
-            w_H = 0.043; w_OH = 0.000033          
-            w_H_eff[i] = w_H + (OH_mt/H_mt)*w_OH
-            w_OH_eff[i] = w_OH + (H_mt/OH_mt)*w_H
-            Rs = 1-Cp[i]/Cm[i]
+        """Permeate concentrations of Ammonium, carbonate and phosphate species"""
+        HCO3_p= (Ps*HCO3_mt)/(Jw[i]+Ps)
+        #CO2_p= (Pco2*CO2_m)/(Jw[i]+Pco2)
+        H2PO4_p = (Ps*H2PO4_mt)/(Jw[i]+Ps)
+        NH4_p = (Ps*NH4_m)/(Jw[i]+Ps)
+        #kk=kk+1
+        H2CO3_p = (Pco2*H2CO3_m)/(Jw[i]+Pco2)
+        H3PO4_p = (Ps*H3PO4_m)/(Jw[i]+Ps)
+        NH3_p = (Pco2*NH3_mt)/(Jw[i]+Pco2)
+        # H2CO3_p = H2CO3_m
+        # H3PO4_p = H3PO4_m
+        # NH3_p = NH3_m
+            
 
-            a= OH_mt*w_OH_eff[i]
-            b= w_OH_eff[i]*(1-Rs)**Theta[i]
-            c=Jw[i]*(1-(1-Rs)**(1+Theta[i]))/(Rs*(1+Theta[i]))
+        #kk=kk+1
+        """Permeation of alkalinity due to H+/OH- diffusion-electromigration"""
+        k_Cb = 0.357/(1+exp(-52.63022629*(Cm[i]-0.12)))        
+        Theta[i] = (1-k_Cb-0.05713078)/(1+exp(-1.72843187*(pH_m[i]-7))) + 0.05713078
+        w_H = 0.043; w_OH = 0.000033          
+        w_H_eff[i] = w_H + (OH_mt/H_mt)*w_OH
+        w_OH_eff[i] = w_OH + (H_mt/OH_mt)*w_H
+        Rs = 1-Cp[i]/Cm[i]
 
-            OH_p = a/(b+c)
+        a= OH_mt*w_OH_eff[i]
+        b= w_OH_eff[i]*(1-Rs)**Theta[i]
+        c=Jw[i]*(1-(1-Rs)**(1+Theta[i]))/(Rs*(1+Theta[i]))
 
-            a2= H_mt*w_H_eff[i]
-            b2= w_H_eff[i]*(1-Rs)**(-Theta[i])
-            c2=Jw[i]*(1-(1-Rs)**(1-Theta[i]))/(Rs*(1-Theta[i]))
+        OH_p = a/(b+c)
 
-            H_p = a2/(b2+c2)
+        a2= H_mt*w_H_eff[i]
+        b2= w_H_eff[i]*(1-Rs)**(-Theta[i])
+        c2=Jw[i]*(1-(1-Rs)**(1-Theta[i]))/(Rs*(1-Theta[i]))
 
-            Ctp[i] = HCO3_p + H2CO3_p     #Weak-acid species mass balance in the permeate
-            Ptp[i] = H2PO4_p + H3PO4_p
-            Ntp[i] = NH4_p + NH3_p
-            Alkp[i]= HCO3_p - H3PO4_p + NH3_p + OH_p - H_p     #Alkalinity mass balance in the permeate
+        H_p = a2/(b2+c2)
+
+        Ctp[i] = HCO3_p + H2CO3_p     #Weak-acid species mass balance in the permeate
+        Ptp[i] = H2PO4_p + H3PO4_p
+        Ntp[i] = NH4_p + NH3_p
+        Alkp[i]= HCO3_p - H3PO4_p + NH3_p + OH_p - H_p     #Alkalinity mass balance in the permeate
 
 
         permeate_speciation = """
