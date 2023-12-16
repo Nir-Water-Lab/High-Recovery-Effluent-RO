@@ -1,4 +1,4 @@
-def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pp,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage):
+def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pnh4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage):
      
     # Import standard library modules first.
     #import sys
@@ -10,41 +10,43 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     #from mpmath import mp
     import scipy.optimize as optimize
 
-    # def selected_array(db_path,db_path1, input_string):
-        # """Load database via COM and run input string."""
-        # dbase = Dispatch('IPhreeqcCOM.Object')
-        # dbase.LoadDatabase(db_path)
-        # dbase.LoadDatabase(db_path1)
-        # dbase.RunString(input_string)
-        # return dbase.GetSelectedOutputArray()
 
-    # def phreecalc(input_string):
-        # """Get results from PHREEQC"""
-        # pitzer_result = selected_array('pitzer.dat','minteq.v4.dat', input_string)
-        # return pitzer_result
-
-    def selected_array(db_path1, db_path2, input_string):
+    
+    def selected_array(db_path1, input_string):
         """Load databases via COM and run input string."""
         dbase1 = Dispatch('IPhreeqcCOM.Object')
-        dbase2 = Dispatch('IPhreeqcCOM.Object')
-
         # Load the first database
         dbase1.LoadDatabase(db_path1)
 
+        # Run the input script for both databases
+        dbase1.RunString(input_string)
+
+        return dbase1.GetSelectedOutputArray()
+
+
+    def selected_arrayy(db_path2, input_stringg):
+        """Load databases via COM and run input string."""
+        dbase2 = Dispatch('IPhreeqcCOM.Object')
+    
         # Load the second database
         dbase2.LoadDatabase(db_path2)
 
         # Run the input script for both databases
-        dbase1.RunString(input_string)
-        dbase2.RunString(input_string)
+        dbase2.RunString(input_stringg)
 
         # Return the results from both databases
-        return dbase1.GetSelectedOutputArray(), dbase2.GetSelectedOutputArray()
+        return dbase2.GetSelectedOutputArray()
+
 
     def phreecalc(input_string):
         """Get results from PHREEQC"""
-        sit_result, minteq_result = selected_array('pitzer.dat', 'minteq.v4.dat', input_string)
-        return sit_result, minteq_result
+        pitzer_result = selected_array('sit.dat',  input_string)
+        return pitzer_result
+    
+    def phreecalc1(input_stringg):
+        """Get results from PHREEQC"""
+        minteq_result = selected_arrayy('minteq.v4.dat', input_stringg)
+        return minteq_result
     
 
     def visco(T, S):
@@ -110,6 +112,13 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     #Ammonium Species
     NH4_b = np.zeros(len(r)); NH4_p = np.zeros(len(r)); NH3_b = np.zeros(len(r)); NH3_p = np.zeros(len(r))
     NH4_bt = np.zeros(len(r)); NH3_bt = np.zeros(len(r))
+
+    """SI """
+     
+    d_CaPhosphate = np.zeros(len(r))
+    SI_Armp_CaPhosphate = np.zeros(len(r))
+
+
 
 
     """Get constants from standard test conditions"""
@@ -186,7 +195,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Fe,P,Nt_feed,Ct_feed)
     #sol_feed = phreecalc(Feed)
      
-    sol_feed_sit, sol_feed_minteq = phreecalc(Feed)
+    sol_feed_minteq = phreecalc1(Feed)
     #print(sol_feed)
     #print(sol_feed_sit)
     #print(sol_feed_minteq)
@@ -203,7 +212,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     
     # assign Pw and Ps values based on the stage
     for i in range(len(r)):
-        """Water Flux and salt passage model""" """Including Acid Base Dynamics"""
+        """Water Flux and salt passage model""" 
         if i <= first_stage:
             Pw, Ps = Pw1, Ps1
         elif first_stage < i <= second_stage:
@@ -260,7 +269,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                 -user_punch     true
                 END"""%(t,7,Cl/(1-r[i]),Na/(1-r[i]),Mg/(1-r[i]),K/(1-r[i]),Ca/(1-r[i]),SO4/(1-r[i]),Fe/(1-r[i]),  Pbar[i])
             
-            sol_rho_sit,sol_rho_minteq = phreecalc(RHO_PHREE)
+            sol_rho_sit = phreecalc(RHO_PHREE)
             rho = 1000*sol_rho_sit[2][0]
             PHI = sol_rho_sit[2][1]
             """Mass Transfer
@@ -284,11 +293,6 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Sh[i] = 0.065*(Re_c[i] ** 0.875) * (Sc ** 0.25)             #Schock and Miquel 1987
             k[i] = Sh[i] * D_NaCl / d                                   # mass transfer coefficient in m/sec
             
-                                   
-            # #Sh = 0.065 * ((rho * u0 * (1 - r[i]) * 2 * d / visc) ** 0.875) * (visc / (rho * D_NaCl)) ** 0.25    # sherwood number  from taniguchi et al 2001
-            # Fd = 100*(Re_c**-0.25)              #Blasuis et al
-            # Fd = 6.23*(Re_ce **-0.3)              #Shock and Miquel           
-            # pressure_drop[i] = (Fd*(rho *(u0**2))*L)/2*d 
             
             """ Pressure Drop
             L = Length of pressure vessel
@@ -330,7 +334,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [0.67, 0.37, 2.58, 7.0 ]
-        pressure_boost = [1.0, 2.6, 2.56, 5.36 ]
+        pressure_boost = [1.05, 0.5, 4.85]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -374,7 +378,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                 -reset          false
                 -user_punch     true 
                  END"""%(t,7,Cl*CF[i],Na*CF[i],Mg*CF[i],K*CF[i],Ca*CF[i],SO4*CF[i],Fe*CF[i], Ctb[i])
-            sol_osm_sit,sol_osm_minteq = phreecalc(osmo_phree)
+            sol_osm_sit = phreecalc(osmo_phree)
             PHI = sol_osm_sit[1][0] 
             rho = sol_osm_sit[1][1]
             #print(PHI,rho)
@@ -437,11 +441,15 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             -high_precision     true
             -ph       true
             -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
-                CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4                                    
-             END"""%(t,7.0,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
+                CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4
+            -saturation_indices  Ca3(PO4)2(beta)
+            -equilibrium_phases  Ca3(PO4)2(beta) 
+            EQUILIBRIUM_PHASES 1
+                Ca3(PO4)2(beta) 0 0        
+            END"""%(t,7.0,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
         
         
-        sol_bulk_sit,sol_bulk_minteq = phreecalc(bulk_speciation)
+        sol_bulk_minteq = phreecalc1(bulk_speciation)
         #print(sol_bulk_minteq)
         
         pH_b[i]=sol_bulk_minteq[2][0];  
@@ -456,6 +464,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         CaH2PO4_b = sol_bulk_minteq[2][28]; FeH2PO4_b = sol_bulk_minteq[2][29]; FeH2PO42_b = sol_bulk_minteq[2][30];  MgH2PO4_b = sol_bulk_minteq[2][31]
         CaNH3_2b = sol_bulk_minteq[2][32]; CaNH322_b = sol_bulk_minteq[2][33]
         CaOH_b = sol_bulk_minteq[2][34];  FeOH_b = sol_bulk_minteq[2][35]; Fe_OH_2b = sol_bulk_minteq[2][36]; Fe_OH_3_b = sol_bulk_minteq[2][37];  Fe_OH_4_b = sol_bulk_minteq[2][38];  FeOH_2b = sol_bulk_minteq[2][39];  Fe2_OH_2_4b = sol_bulk_minteq[2][40] 
+        
+        d_CaPhosphate[i] = sol_bulk_minteq[2][42]; SI_Armp_CaPhosphate[i] = sol_bulk_minteq[2][43]
 
         "Summing Ion-pairs"
         OH_bt = OH_b + MgOH_b + CaOH_b + FeOH_b + Fe_OH_2b + Fe_OH_3_b + Fe_OH_4_b + FeOH_2b + Fe2_OH_2_4b
@@ -469,10 +479,25 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
 
         NH3_bt[i] = NH3_b[i] + CaNH3_2b + CaNH322_b
         NH4_b[i] = Ntb[i] - NH3_bt[i]
-        
-        
+
+        """Resolving Cpt using SDEF theory"""
+        omega_cat = 0.549e-6 #Na
+        Omega_an = 0.310e-6 #Cl
+        zs_cat = 1#Na
+        zs_an = -1#Cl
+        Rs = 1-Cp[i]/Cm[i]
+        theta_m = (omega_cat - Omega_an)/(zs_cat * omega_cat - zs_an * Omega_an)
+        denum1 = Pnh4*(1-Rs)**(theta_m)
+        denum2 = Jw[i]*(1-(1-Rs)**(1-theta_m))/(Rs*(1-theta_m)) 
+        """NH4_m using RO Case for trace ion CP;Analytical solution for trace ion CP"""
+        Ds_cat = 1.334e-9 #Diffusion Coeff. Na
+        Ds_an = 2.031e-9  #Diffusion Coeff. Cl
+        Ds = ((zs_cat - zs_an)* (Ds_cat*Ds_an))/(zs_cat*Ds_cat - zs_an*Ds_an) #Diffusion coefficient of the dominant salt
+        delta = Ds/k[i]        #Boundary layer thickness
+        Dt = 1.98e-9           #Diffusion coef. of NH4+ 
+        theta_delta = (Ds_cat - Ds_an)/(zs_cat * Ds_cat - zs_an * Ds_an)
    
-        #Using the solution diffusion model, transport; HPO4_2, H2PO4, H3PO4,  HCO3, CO2
+        #Using the solution-diffusion-film model, transport; HPO4_2, H2PO4, H3PO4,  HCO3, CO2
         if i==0:
             """Carbonate system"""
             HCO3_p= (Ps*HCO3_bt[0]*exp(Jw[i]/k[i]))/(Jw[0]+Ps*exp(Jw[i]/k[i])) 
@@ -485,7 +510,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             #H3PO4_p = H3PO4_b[i]
             Ptp[0] =  H2PO4_p  + H3PO4_p
             """Ammonium System"""
-            NH4_p = (Ps*NH4_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Ps*exp(Jw[i]/k[i]))
+            #NH4_p = (Pnh4*NH4_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Pnh4*exp(Jw[i]/k[i])) # SD Theory
+            NH4_p = (Pnh4* NH4_b[0] * exp((Jw[i]*delta)/Dt)*exp((Jw[i]*theta_delta)/k[i]))/(denum1 + denum2) #SDEF
             #NH3_p = NH3_b[i]
             NH3_p=  (Pco2 *NH3_bt[0] *exp(Jw[i]/k[i]))/(Jw[0]+Pco2*exp(Jw[i]/k[i]))      #Assuming same  permeability as C02
             Ntp[0] = NH4_p + NH3_p
@@ -500,15 +526,19 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         CO2_m = CO2_b[i] 
         H3PO4_m = H3PO4_b[i]
         NH3_m = NH3_bt[i]
-        #pH_m_old=100; pH_m[i]=pH_b[i]; Alkm= Alkb[i]*exp(Jw[i]/k[i]); Alkm_old = 0
-        #kk = 0
-        # while(abs((pH_m[i]-pH_m_old)/pH_m[i])>0.0001)and(kk<50):
-            # Alkm_old = Alkm
-            # pH_m_old = pH_m[i]
         """Estimation of weak acid species concentration in the film layer"""
         HCO3_m=HCO3_p+(HCO3_bt[i]-HCO3_p)*exp(Jw[i]/k[i]) 
         H2PO4_m = H2PO4_p + (H2PO4_bt[i] - H2PO4_p)*exp(Jw[i]/k[i])
-        NH4_m = NH4_p + (NH4_b[i] - NH4_p)*exp(Jw[i]/k[i])
+        #NH4_m = NH4_p + (NH4_b[i] - NH4_p)*exp(Jw[i]/k[i]) #
+        """NH4_m using RO Case for trace ion CP;Analytical solution for trace ion CP"""
+        Ds_cat = 1.334e-9 #Diffusion Coeff. Na
+        Ds_an = 2.031e-9  #Diffusion Coeff. Cl
+        Ds = ((zs_cat - zs_an)* (Ds_cat*Ds_an))/(zs_cat*Ds_cat - zs_an*Ds_an) #Diffusion coefficient of the dominant salt
+        delta = Ds/k[i]        #Boundary layer thickness
+        Dt = 1.98e-9           #Diffusion coef. of NH4+ 
+        theta_delta = (Ds_cat - Ds_an)/(zs_cat * Ds_cat - zs_an * Ds_an)
+        NH4_m = NH4_b[i] * exp((Jw[i]*delta)/Dt)*exp((Jw[i]*theta_delta)/k[i])
+
         OH_m = OH_p+(OH_bt-OH_p)*exp(Jw[i]/(3.34*k[i]))   ## ?????
         H_m = H_p+(H_bt-H_p)*exp(Jw[i]/(5.62*k[i])) 
 
@@ -548,7 +578,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             END"""%(t,7,CF[i]*Cl,CF[i]*SO4,CF[i]*Na,CF[i]*Mg,CF[i]*K,CF[i]*Ca,CF[i]*Fe,Ctm,Ptm,Ntm,Alkm,Pbar[i])
             
             
-        sol_film_sit, sol_film_minteq = phreecalc(film_speciation)
+        sol_film_minteq = phreecalc1(film_speciation)
         #print(sol_film_minteq)
         pH_m[i]=sol_film_minteq[2][0];  
         HCO3_m=sol_film_minteq[2][1];  H2CO3_m = sol_film_minteq[2][2] ; #CO3_m[i] = sol_film_minteq[2][3]
@@ -580,7 +610,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         HCO3_p= (Ps*HCO3_mt)/(Jw[i]+Ps)
         #CO2_p= (Pco2*CO2_m)/(Jw[i]+Pco2)
         H2PO4_p = (Ps*H2PO4_mt)/(Jw[i]+Ps)
-        NH4_p = (Ps*NH4_m)/(Jw[i]+Ps)
+        #NH4_p = (Pnh4*NH4_m)/(Jw[i]+Pnh4)
         #kk=kk+1
         H2CO3_p = (Pco2*H2CO3_m)/(Jw[i]+Pco2)
         H3PO4_p = (Ps*H3PO4_m)/(Jw[i]+Ps)
@@ -592,26 +622,32 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
 
         #kk=kk+1
         """Permeation of alkalinity due to H+/OH- diffusion-electromigration"""
-        k_Cb = 0.357/(1+exp(-52.63022629*(Cm[i]-0.12)))        
-        Theta[i] = (1-k_Cb-0.05713078)/(1+exp(-1.72843187*(pH_m[i]-7))) + 0.05713078
-        w_H = 0.043; w_OH = 0.000033          
-        w_H_eff[i] = w_H + (OH_mt/H_mt)*w_OH
-        w_OH_eff[i] = w_OH + (H_mt/OH_mt)*w_H
-        Rs = 1-Cp[i]/Cm[i]
+        # k_Cb = 0.357/(1+exp(-52.63022629*(Cm[i]-0.12)))        
+        # Theta[i] = (1-k_Cb-0.05713078)/(1+exp(-1.72843187*(pH_m[i]-7))) + 0.05713078
+        # w_H = 0.043; w_OH = 0.000033          
+        # w_H_eff[i] = w_H + (OH_mt/H_mt)*w_OH
+        # w_OH_eff[i] = w_OH + (H_mt/OH_mt)*w_H
+        # Rs = 1-Cp[i]/Cm[i]
 
-        a= OH_mt*w_OH_eff[i]
-        b= w_OH_eff[i]*(1-Rs)**Theta[i]
-        c=Jw[i]*(1-(1-Rs)**(1+Theta[i]))/(Rs*(1+Theta[i]))
+        # a= OH_mt*w_OH_eff[i]
+        # b= w_OH_eff[i]*(1-Rs)**Theta[i]
+        # c=Jw[i]*(1-(1-Rs)**(1+Theta[i]))/(Rs*(1+Theta[i]))
 
-        OH_p = a/(b+c)
+        # OH_p = a/(b+c)
 
-        a2= H_mt*w_H_eff[i]
-        b2= w_H_eff[i]*(1-Rs)**(-Theta[i])
-        c2=Jw[i]*(1-(1-Rs)**(1-Theta[i]))/(Rs*(1-Theta[i]))
+        # a2= H_mt*w_H_eff[i]
+        # b2= w_H_eff[i]*(1-Rs)**(-Theta[i])
+        # c2=Jw[i]*(1-(1-Rs)**(1-Theta[i]))/(Rs*(1-Theta[i]))
 
-        H_p = a2/(b2+c2)
+        # H_p = a2/(b2+c2)
 
-        Ctp[i] = HCO3_p + H2CO3_p     #Weak-acid species mass balance in the permeate
+        """Permeation of alkalinity due to NH4 diffusion electromigration"""
+        num1 = NH4_m * Pnh4
+        NH4_p = num1/(denum1+denum2)
+        
+        """Weak-acid species mass balance in the permeate"""
+
+        Ctp[i] = HCO3_p + H2CO3_p     
         Ptp[i] = H2PO4_p + H3PO4_p
         Ntp[i] = NH4_p + NH3_p
         Alkp[i]= HCO3_p - H3PO4_p + NH3_p + OH_p - H_p     #Alkalinity mass balance in the permeate
@@ -635,7 +671,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             -molalities      HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  NaHCO3  NaCO3-  NaHPO4-                   
              END"""%(t,7,Cp[i]/2,Cp[i]/2,Ctp[i],Ptp[i],Ntp[i],Alkp[i])
         
-        sol_permeate_sit,sol_permeate_minteq = phreecalc(permeate_speciation)
+        sol_permeate_minteq = phreecalc1(permeate_speciation)
         #print(sol_permeate_minteq)
         pH_p[i]=sol_permeate_minteq[1][0];  
         HCO3_p=sol_permeate_minteq[1][1]; H2CO3_p=sol_permeate_minteq[1][2]; CO3_p = sol_permeate_minteq[1][3];  OH_p=sol_permeate_minteq[1][4]; H_p=sol_permeate_minteq[1][5]; 
@@ -660,39 +696,44 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                  
 
         
-    i=i-1
-    bulk_speciation = """
-            SOLUTION 1 
-            units     mol/kgw
-            temp        %f
-            pH          %f
-            Cl          %e
-            S(6)        %e  
-            Na          %e 
-            Mg          %e 
-            K           %e 
-            Ca          %e
-            C(4)        %e
-            P           %e
-            N(-3)       %e
-            Alkalinity    %e
-            USE solution 1
-            REACTION_PRESSURE 1
-            %f
-            SELECTED_OUTPUT
-            -reset    false
-            -high_precision     true
-            -ph       true
-            -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
-                CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4
-            -totals               Ca
-            -saturation_indices   Aragonite  
-            -equilibrium_phases   Aragonite  
-            EQUILIBRIUM_PHASES 1
-                Aragonite 0 0
-            END"""%(t,7,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
-        
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl
+    #i=i-1
+    # for i in range(len(r)):
+        # bulk_speciation = """
+                # SOLUTION 1 
+                # units     mol/kgw
+                # temp        %f
+                # pH          %f
+                # Cl          %e
+                # S(6)        %e  
+                # Na          %e 
+                # Mg          %e 
+                # K           %e 
+                # Ca          %e
+                # Fe          %e
+                # C(4)        %e
+                # P           %e
+                # N(-3)       %e
+                # Alkalinity    %e
+                # USE solution 1
+                # REACTION_PRESSURE 1
+                # %f
+                # SELECTED_OUTPUT
+                # -reset    false
+                # -high_precision     true
+                # -ph       true
+                # -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
+                    # CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4
+                # -saturation_indices  Ca3(PO4)2(beta)
+                # -equilibrium_phases  Ca3(PO4)2(beta)
+                # EQUILIBRIUM_PHASES 1
+                    # Ca3(PO4)2(beta) 0 0                       
+                # END"""%(t,7.0,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
+        # sol_bulk1_minteq = phreecalc1(bulk_speciation) 
+        #print(sol_bulk1_minteq)
+        # d_CaPhosphate[i] = sol_bulk1_minteq[1][42]; SI_Armp_CaPhosphate[i] = sol_bulk1_minteq[1][43]; 
+ 
+
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl,d_CaPhosphate, SI_Armp_CaPhosphate
 
     
 
