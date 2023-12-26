@@ -1,4 +1,4 @@
-def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pnh4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage):
+def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage):
      
     # Import standard library modules first.
     #import sys
@@ -112,6 +112,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     #Ammonium Species
     NH4_b = np.zeros(len(r)); NH4_p = np.zeros(len(r)); NH3_b = np.zeros(len(r)); NH3_p = np.zeros(len(r))
     NH4_bt = np.zeros(len(r)); NH3_bt = np.zeros(len(r))
+
+    Pnh4 = np.zeros(len(r))  #Pnh4 Ammonium ion permeability
 
     """SI """
      
@@ -334,17 +336,17 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [0.67, 0.37, 2.58, 7.0 ]
-        pressure_boost = [1.05, 0.5, 4.85]
+        pressure_boost = [1.01, 1.5, 5.2]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
             Pbar[i] = Pbar[first_stage] + pressure_boost[0] - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif second_stage < i <= third_stage:
             Pbar[i] = Pbar[second_stage] + pressure_boost[1] - pressure_drop[i] * (r[i]/r[len(r)-1])
-        elif third_stage < i <= fourth_stage:
-            Pbar[i] = Pbar[third_stage] + pressure_boost[2] - pressure_drop[i] * (r[i]/r[len(r)-1])
         else:
-            Pbar[i] = Pbar[fourth_stage] + pressure_boost[3] - pressure_drop[i] * (r[i]/r[len(r)-1])
+            Pbar[i] = Pbar[third_stage] + pressure_boost[2] - pressure_drop[i] * (r[i]/r[len(r)-1])
+        #else:
+            #Pbar[i] = Pbar[fourth_stage] + pressure_boost[3] - pressure_drop[i] * (r[i]/r[len(r)-1])
 
             
         
@@ -402,18 +404,10 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         fourth_stage_Avg_flux = (sum(Jw[third_stage + 1:fourth_stage + 1]) / (fourth_stage - third_stage)) * 3600000
         #fifth_stage_Avg_flux = (sum(Jw[fourth_stage + 1:]) / (fifth_stage - fourth_stage + 1)) * 3600000  
         
-        # """Specific Energy Consumption """
-        # SEC_1 = ((1 - r[0])/r[-1]) * (Pbar[i] * 0.02778)
-        # SEC_2 = ((1 - r[first_stage + 1])/r[-1]) * (pressure_boost[0] * 0.02778)
-        # SEC_3 = ((1 - r[second_stage + 1])/r[-1]) * (pressure_boost[1] * 0.02778)
-        # SEC_4 = ((1 - r[third_stage + 1])/r[-1]) * (pressure_boost[2] * 0.02778)
-        # SEC_5 =  ((1 - r[fourth_stage + 1])/r[-1]) * (pressure_boost[3] * 0.02778)
-
-        # Total_SEC = SEC_1 + SEC_2 + SEC_3 + SEC_4 + SEC_5        
-    
 
     
-        #print(r[i])
+
+    #print(first_stage_Avg_flux,second_stage_Avg_flux,third_stage_Avg_flux,fourth_stage_Avg_flux)
 
     for i in range(len(r) - 1):
 
@@ -429,7 +423,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             K           %e 
             Ca          %e 
             Fe          %e
-            C(4)           %e
+            C(4)        %e
             P           %e
             N(-3)       %e
             Alkalinity    %e
@@ -480,14 +474,22 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         NH3_bt[i] = NH3_b[i] + CaNH3_2b + CaNH322_b
         NH4_b[i] = Ntb[i] - NH3_bt[i]
 
+        """Using a Linear Function to find NH4+ permeability over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
+        if pH_b[i] < 8.5:
+            Pnh4[i] = (-5e-8*pH_b[i]) + 2e-6   
+        else:
+            Pnh4[i] = 1.2e-6
+        
+    
         """Resolving Cpt using SDEF theory"""
         omega_cat = 0.549e-6 #Na
         Omega_an = 0.310e-6 #Cl
         zs_cat = 1#Na
+
         zs_an = -1#Cl
         Rs = 1-Cp[i]/Cm[i]
-        theta_m = (omega_cat - Omega_an)/(zs_cat * omega_cat - zs_an * Omega_an)
-        denum1 = Pnh4*(1-Rs)**(theta_m)
+        theta_m = 0.086  #(omega_cat - Omega_an)/(zs_cat * omega_cat - zs_an * Omega_an)
+        denum1 = Pnh4[i]*(1-Rs)**(theta_m)
         denum2 = Jw[i]*(1-(1-Rs)**(1-theta_m))/(Rs*(1-theta_m)) 
         """NH4_m using RO Case for trace ion CP;Analytical solution for trace ion CP"""
         Ds_cat = 1.334e-9 #Diffusion Coeff. Na
@@ -511,11 +513,11 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Ptp[0] =  H2PO4_p  + H3PO4_p
             """Ammonium System"""
             #NH4_p = (Pnh4*NH4_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Pnh4*exp(Jw[i]/k[i])) # SD Theory
-            NH4_p = (Pnh4* NH4_b[0] * exp((Jw[i]*delta)/Dt)*exp((Jw[i]*theta_delta)/k[i]))/(denum1 + denum2) #SDEF
+            #NH4_p = (Pnh4* NH4_b[0] * exp((Jw[i]*delta)/Dt)*exp((Jw[i]*theta_delta)/k[i]))/(denum1 + denum2) #SDEF
             #NH3_p = NH3_b[i]
-            NH3_p=  (Pco2 *NH3_bt[0] *exp(Jw[i]/k[i]))/(Jw[0]+Pco2*exp(Jw[i]/k[i]))      #Assuming same  permeability as C02
-            Ntp[0] = NH4_p + NH3_p
-            Ntp_Accum[0] = Ntp[0]
+            #NH3_p=  (Pco2 *NH3_bt[0] *exp(Jw[i]/k[i]))/(Jw[0]+Pco2*exp(Jw[i]/k[i]))      #Assuming same  permeability as C02
+            # Ntp[0] = NH4_p + NH3_p
+            # Ntp_Accum[0] = Ntp[0]
 
             OH_p = 0
             H_p = 0
@@ -531,12 +533,12 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         H2PO4_m = H2PO4_p + (H2PO4_bt[i] - H2PO4_p)*exp(Jw[i]/k[i])
         #NH4_m = NH4_p + (NH4_b[i] - NH4_p)*exp(Jw[i]/k[i]) #
         """NH4_m using RO Case for trace ion CP;Analytical solution for trace ion CP"""
-        Ds_cat = 1.334e-9 #Diffusion Coeff. Na
-        Ds_an = 2.031e-9  #Diffusion Coeff. Cl
-        Ds = ((zs_cat - zs_an)* (Ds_cat*Ds_an))/(zs_cat*Ds_cat - zs_an*Ds_an) #Diffusion coefficient of the dominant salt
-        delta = Ds/k[i]        #Boundary layer thickness
-        Dt = 1.98e-9           #Diffusion coef. of NH4+ 
-        theta_delta = (Ds_cat - Ds_an)/(zs_cat * Ds_cat - zs_an * Ds_an)
+        #Ds_cat = 1.334e-9 #Diffusion Coeff. Na
+        #Ds_an = 2.031e-9  #Diffusion Coeff. Cl
+        #Ds = ((zs_cat - zs_an)* (Ds_cat*Ds_an))/(zs_cat*Ds_cat - zs_an*Ds_an) #Diffusion coefficient of the dominant salt
+        #delta = Ds/k[i]        #Boundary layer thickness
+        #Dt = 1.98e-9           #Diffusion coef. of NH4+ 
+        #theta_delta = (Ds_cat - Ds_an)/(zs_cat * Ds_cat - zs_an * Ds_an)
         NH4_m = NH4_b[i] * exp((Jw[i]*delta)/Dt)*exp((Jw[i]*theta_delta)/k[i])
 
         OH_m = OH_p+(OH_bt-OH_p)*exp(Jw[i]/(3.34*k[i]))   ## ?????
@@ -618,31 +620,9 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         # H2CO3_p = H2CO3_m
         # H3PO4_p = H3PO4_m
         # NH3_p = NH3_m
-            
-
-        #kk=kk+1
-        """Permeation of alkalinity due to H+/OH- diffusion-electromigration"""
-        # k_Cb = 0.357/(1+exp(-52.63022629*(Cm[i]-0.12)))        
-        # Theta[i] = (1-k_Cb-0.05713078)/(1+exp(-1.72843187*(pH_m[i]-7))) + 0.05713078
-        # w_H = 0.043; w_OH = 0.000033          
-        # w_H_eff[i] = w_H + (OH_mt/H_mt)*w_OH
-        # w_OH_eff[i] = w_OH + (H_mt/OH_mt)*w_H
-        # Rs = 1-Cp[i]/Cm[i]
-
-        # a= OH_mt*w_OH_eff[i]
-        # b= w_OH_eff[i]*(1-Rs)**Theta[i]
-        # c=Jw[i]*(1-(1-Rs)**(1+Theta[i]))/(Rs*(1+Theta[i]))
-
-        # OH_p = a/(b+c)
-
-        # a2= H_mt*w_H_eff[i]
-        # b2= w_H_eff[i]*(1-Rs)**(-Theta[i])
-        # c2=Jw[i]*(1-(1-Rs)**(1-Theta[i]))/(Rs*(1-Theta[i]))
-
-        # H_p = a2/(b2+c2)
 
         """Permeation of alkalinity due to NH4 diffusion electromigration"""
-        num1 = NH4_m * Pnh4
+        num1 = NH4_m * Pnh4[i]
         NH4_p = num1/(denum1+denum2)
         
         """Weak-acid species mass balance in the permeate"""
@@ -694,46 +674,10 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         Ntp_Accum[i] = np.average(Ntp[0:i+1])
     Ntp_Accum_mgl = 14011*Ntp_Accum
                  
-
-        
-    #i=i-1
-    # for i in range(len(r)):
-        # bulk_speciation = """
-                # SOLUTION 1 
-                # units     mol/kgw
-                # temp        %f
-                # pH          %f
-                # Cl          %e
-                # S(6)        %e  
-                # Na          %e 
-                # Mg          %e 
-                # K           %e 
-                # Ca          %e
-                # Fe          %e
-                # C(4)        %e
-                # P           %e
-                # N(-3)       %e
-                # Alkalinity    %e
-                # USE solution 1
-                # REACTION_PRESSURE 1
-                # %f
-                # SELECTED_OUTPUT
-                # -reset    false
-                # -high_precision     true
-                # -ph       true
-                # -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
-                    # CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4
-                # -saturation_indices  Ca3(PO4)2(beta)
-                # -equilibrium_phases  Ca3(PO4)2(beta)
-                # EQUILIBRIUM_PHASES 1
-                    # Ca3(PO4)2(beta) 0 0                       
-                # END"""%(t,7.0,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
-        # sol_bulk1_minteq = phreecalc1(bulk_speciation) 
-        #print(sol_bulk1_minteq)
-        # d_CaPhosphate[i] = sol_bulk1_minteq[1][42]; SI_Armp_CaPhosphate[i] = sol_bulk1_minteq[1][43]; 
+    #print(Pnh4)
  
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl,d_CaPhosphate, SI_Armp_CaPhosphate
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl,d_CaPhosphate, SI_Armp_CaPhosphate,Pnh4
 
     
 

@@ -28,7 +28,7 @@ feed_pH : pH, feed (float)
 Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
-feed_pH = 8.5 # Enter pH 
+feed_pH = 8.6 # Enter pH 
 Ct_feed = 0.0153 #Enter total inorganic carbon (mol/l)
 Nt_feed = 146.4 #mg/l
 Alk_feed = 0.0156   #eq/L ignored
@@ -42,7 +42,7 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 5.6 #Enter Pressure (bars) 
+P_feed = 8.8 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 #u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 95.0 #Enter Recovey Ratio (%)
@@ -75,12 +75,12 @@ kb : Average mass transfer for uncharged (float)
 # #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
 ks = 0 #2.32e-5 #2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
 kt = 0
-Pw1, Ps1 = 0.694e-6, 0.256e-6 #1.222e-6, 2.533e-8   #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
-Pw2, Ps2 = 0.694e-6, 0.256e-6 #1.208e-6, 2.414e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
-Pw3, Ps3 = 0.694e-6, 0.256e-6 #1.817e-6, 2.56e-8  #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
-Pw4, Ps4 = 0.694e-6, 0.256e-6 #2.05e-6, 2.439e-8  #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
+Pw1, Ps1 = 0.694e-6, 0.282e-6 #1.222e-6, 2.533e-8   #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
+Pw2, Ps2 = 0.694e-6, 0.282e-6 #1.208e-6, 2.414e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
+Pw3, Ps3 = 0.694e-6, 0.282e-6 #1.817e-6, 2.56e-8  #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
+Pw4, Ps4 = 0.694e-6, 0.282e-6 #2.05e-6, 2.439e-8  #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
 Pco2 = 1.5e-1 #Assumed Permeability of CO2
-Pnh4 = 0.881e-6   #Permeability of NH4+
+#Pnh4 = 0.881e-6   #Permeability of NH4+
  
 """Enter manufacturer results from standard test conditions for estimating missing membrane constants"""
 """
@@ -104,7 +104,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 
 """The call for the function"""
 (r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux,
- pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl,d_CaPhosphate, SI_Armp_CaPhosphate)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,Pnh4,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage)
+ pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl,d_CaPhosphate, SI_Armp_CaPhosphate,Pnh4)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage)
  
 import xlsxwriter
 # Create folder
@@ -132,7 +132,7 @@ r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
 headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)',
-           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate']
+           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate','NH4+ Permeability']
 #, , 
 
 for i, header in enumerate(headers):
@@ -166,6 +166,7 @@ for i in range(len(r)):
     worksheet.write(row,20,Ntp[i])
     worksheet.write(row,21,Ntp_Accum_mgl[i])
     worksheet.write(row,22,SI_Armp_CaPhosphate[i])
+    worksheet.write(row,23,Pnh4[i])
     
     #worksheet.write(row, 25, l[i])
     
