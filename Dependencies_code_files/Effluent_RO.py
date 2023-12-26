@@ -114,7 +114,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     NH4_bt = np.zeros(len(r)); NH3_bt = np.zeros(len(r))
 
     Pnh4 = np.zeros(len(r))  #Pnh4 Ammonium ion permeability
-
+    theta_m = np.zeros(len(r))
     """SI """
      
     d_CaPhosphate = np.zeros(len(r))
@@ -488,9 +488,11 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
 
         zs_an = -1#Cl
         Rs = 1-Cp[i]/Cm[i]
-        theta_m = 0.086  #(omega_cat - Omega_an)/(zs_cat * omega_cat - zs_an * Omega_an)
-        denum1 = Pnh4[i]*(1-Rs)**(theta_m)
-        denum2 = Jw[i]*(1-(1-Rs)**(1-theta_m))/(Rs*(1-theta_m)) 
+        theta_m[i] = -0.0486* (pH_b[i]*pH_b[i]) + (0.7373*pH_b[i]) - 2.6937       #BW30LE
+        #theta_m[i] = -0.031* (pH_b[i]*pH_b[i]) + (0.5433*pH_b[i]) - 2.0069      # XLE
+        #theta_m[i] = -0.0323* (pH_b[i]*pH_b[i]) + (0.6078*pH_b[i]) - 2.3605       #SW30HRLE
+        denum1 = Pnh4[i]*(1-Rs)**(theta_m[i])
+        denum2 = Jw[i]*(1-(1-Rs)**(1-theta_m[i]))/(Rs*(1-theta_m[i])) 
         """NH4_m using RO Case for trace ion CP;Analytical solution for trace ion CP"""
         Ds_cat = 1.334e-9 #Diffusion Coeff. Na
         Ds_an = 2.031e-9  #Diffusion Coeff. Cl
