@@ -28,7 +28,7 @@ feed_pH : pH, feed (float)
 Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
-feed_pH = 8.6 # Enter pH 
+feed_pH = 5.5 # Enter pH 
 Ct_feed = 0.0153 #Enter total inorganic carbon (mol/l)
 Nt_feed = 146.4 #mg/l
 Alk_feed = 0.0156   #eq/L ignored
@@ -75,10 +75,17 @@ kb : Average mass transfer for uncharged (float)
 # #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
 ks = 0 #2.32e-5 #2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
 kt = 0
-Pw1, Ps1 = 0.694e-6, 0.282e-6 #1.222e-6, 2.533e-8   #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
-Pw2, Ps2 = 0.694e-6, 0.282e-6 #1.208e-6, 2.414e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
-Pw3, Ps3 = 0.694e-6, 0.282e-6 #1.817e-6, 2.56e-8  #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
-Pw4, Ps4 = 0.694e-6, 0.282e-6 #2.05e-6, 2.439e-8  #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
+Salt_Permeability = (-2E-08 * (feed_pH*feed_pH)) + (3E-07* feed_pH) - 7.3E-07    #Dow Filmtec XLE 
+Ps1 = Ps2 = Ps3 = Ps4 = Salt_Permeability
+Water_Permeability = (-5E-09 * (feed_pH*feed_pH)) + (6E-08* feed_pH) + 7.68E-07     #Dow Filmtec XLE
+Pw1 = Pw2 = Pw3 = Pw4 = Water_Permeability
+
+#print(Ps1,Pw1) 
+
+# Pw1, Ps1 = 0.694e-6, 0.282e-6 #1.222e-6, 2.533e-8   #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
+# Pw2, Ps2 = 0.694e-6, 0.282e-6 #1.208e-6, 2.414e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
+# Pw3, Ps3 = 0.694e-6, 0.282e-6 #1.817e-6, 2.56e-8  #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
+# Pw4, Ps4 = 0.694e-6, 0.282e-6 #2.05e-6, 2.439e-8  #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
 Pco2 = 1.5e-1 #Assumed Permeability of CO2
 #Pnh4 = 0.881e-6   #Permeability of NH4+
  
