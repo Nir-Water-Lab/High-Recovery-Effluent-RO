@@ -335,7 +335,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             ## Concentration Polarization Modulus
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
-            #Calculating pressure per stage [0.67, 0.37, 2.58, 7.0 ]
+            #Calculating pressure per stage [1.01, 1.5, 5.2 ]
         pressure_boost = [1.01, 1.5, 5.2]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
@@ -426,7 +426,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             C(4)        %e
             P           %e
             N(-3)       %e
-            Alkalinity    %e
+            Alkalinity  %e
             USE solution 1
             REACTION_PRESSURE 1
             %f
@@ -440,31 +440,31 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             -equilibrium_phases  Ca3(PO4)2(beta) 
             EQUILIBRIUM_PHASES 1
                 Ca3(PO4)2(beta) 0 0        
-            END"""%(t,7.0,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
+            END"""%(t,feed_pH,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
         
         
         sol_bulk_minteq = phreecalc1(bulk_speciation)
         #print(sol_bulk_minteq)
         
-        pH_b[i]=sol_bulk_minteq[2][0];  
-        HCO3_b[i]=sol_bulk_minteq[2][1];  CO2_b[i]=sol_bulk_minteq[2][2] ; #CO3_b[i] = sol_bulk_minteq[2][3]
-        HPO4_2_b[i] = sol_bulk_minteq[2][5];  H2PO4_b[i] = sol_bulk_minteq[2][6]; H3PO4_b[i] =sol_bulk_minteq[2][7]
+        pH_b[i]=sol_bulk_minteq[1][0];  
+        HCO3_b[i]=sol_bulk_minteq[1][1];  CO2_b[i]=sol_bulk_minteq[1][2] ; #CO3_b[i] = sol_bulk_minteq[2][3]
+        HPO4_2_b[i] = sol_bulk_minteq[1][5];  H2PO4_b[i] = sol_bulk_minteq[1][6]; H3PO4_b[i] =sol_bulk_minteq[1][7]
         #print(pH_b)
-        NH3_b[i] = sol_bulk_minteq[2][9]
-        OH_b=sol_bulk_minteq[2][10]; H_b=sol_bulk_minteq[2][11]; MgOH_b=sol_bulk_minteq[2][12]; HSO4_b = sol_bulk_minteq[2][13]; MgCO3_b = sol_bulk_minteq[2][14]
-        MgPO4_b =sol_bulk_minteq[2][15]; CaHCO3_b = sol_bulk_minteq[2][16]; NaHCO3_b = sol_bulk_minteq[2][17]; CaCO3_b = sol_bulk_minteq[2][18]; MgHCO3_b = sol_bulk_minteq[2][19]; 
-        NaCO3_b = sol_bulk_minteq[2][20];   FeHCO3_b = sol_bulk_minteq[2][21]
-        CaHPO4_b =sol_bulk_minteq[2][22]  ; FeHPO4_b =sol_bulk_minteq[2][23] ; KHPO4_b = sol_bulk_minteq[2][24] ; MgHPO4_b = sol_bulk_minteq[2][25] ; NaHPO4_b = sol_bulk_minteq[2][26]; FeHPO4_b1 = sol_bulk_minteq[2][27]
-        CaH2PO4_b = sol_bulk_minteq[2][28]; FeH2PO4_b = sol_bulk_minteq[2][29]; FeH2PO42_b = sol_bulk_minteq[2][30];  MgH2PO4_b = sol_bulk_minteq[2][31]
-        CaNH3_2b = sol_bulk_minteq[2][32]; CaNH322_b = sol_bulk_minteq[2][33]
-        CaOH_b = sol_bulk_minteq[2][34];  FeOH_b = sol_bulk_minteq[2][35]; Fe_OH_2b = sol_bulk_minteq[2][36]; Fe_OH_3_b = sol_bulk_minteq[2][37];  Fe_OH_4_b = sol_bulk_minteq[2][38];  FeOH_2b = sol_bulk_minteq[2][39];  Fe2_OH_2_4b = sol_bulk_minteq[2][40] 
+        NH3_b[i] = sol_bulk_minteq[1][9]
+        OH_b=sol_bulk_minteq[1][10]; H_b=sol_bulk_minteq[1][11]; MgOH_b=sol_bulk_minteq[1][12]; HSO4_b = sol_bulk_minteq[1][13]; MgCO3_b = sol_bulk_minteq[1][14]; m_NH4SO4_b = sol_bulk_minteq[1][15]
+        MgPO4_b =sol_bulk_minteq[1][16]; CaHCO3_b = sol_bulk_minteq[1][17]; NaHCO3_b = sol_bulk_minteq[1][18]; CaCO3_b = sol_bulk_minteq[1][19]; MgHCO3_b = sol_bulk_minteq[1][20]; 
+        NaCO3_b = sol_bulk_minteq[1][21];   FeHCO3_b = sol_bulk_minteq[1][22]
+        CaHPO4_b =sol_bulk_minteq[1][23]  ; FeHPO4_b =sol_bulk_minteq[1][24] ; KHPO4_b = sol_bulk_minteq[1][25] ; MgHPO4_b = sol_bulk_minteq[1][26] ; NaHPO4_b = sol_bulk_minteq[1][27]; FeHPO4_b1 = sol_bulk_minteq[1][28]
+        CaH2PO4_b = sol_bulk_minteq[1][29]; FeH2PO4_b = sol_bulk_minteq[1][30]; FeH2PO42_b = sol_bulk_minteq[1][31];  MgH2PO4_b = sol_bulk_minteq[1][32]
+        CaNH3_2b = sol_bulk_minteq[1][33]; CaNH322_b = sol_bulk_minteq[1][34]
+        CaOH_b = sol_bulk_minteq[1][35];  FeOH_b = sol_bulk_minteq[1][36]; Fe_OH_2b = sol_bulk_minteq[1][37]; Fe_OH_3_b = sol_bulk_minteq[1][38];  Fe_OH_4_b = sol_bulk_minteq[1][39];  FeOH_2b = sol_bulk_minteq[1][40];  Fe2_OH_2_4b = sol_bulk_minteq[1][41] 
         
-        d_CaPhosphate[i] = sol_bulk_minteq[2][42]; SI_Armp_CaPhosphate[i] = sol_bulk_minteq[2][43]
-
+        d_CaPhosphate[i] = sol_bulk_minteq[1][43]; SI_Armp_CaPhosphate[i] = sol_bulk_minteq[1][44]
+        print(SI_Armp_CaPhosphate)
         "Summing Ion-pairs"
         OH_bt = OH_b + MgOH_b + CaOH_b + FeOH_b + Fe_OH_2b + Fe_OH_3_b + Fe_OH_4_b + FeOH_2b + Fe2_OH_2_4b
         H_bt = H_b + HSO4_b 
-        HCO3_bt[i] = HCO3_b[i] + CaHCO3_b + NaHCO3_b + MgHCO3_b + FeHCO3_b 
+        HCO3_bt[100] = HCO3_b[i] + CaHCO3_b + NaHCO3_b + MgHCO3_b + FeHCO3_b 
         CO3_b[i] = Ctb[i] - HCO3_bt[i] - CO2_b[i]
 
         HPO4_2_bt[i] = HPO4_2_b[i] +  CaHPO4_b + FeHPO4_b + KHPO4_b + MgHPO4_b +  NaHPO4_b + FeHPO4_b1
@@ -475,8 +475,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         NH4_b[i] = Ntb[i] - NH3_bt[i]
 
         """Using a Linear Function to find NH4+ permeability over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
-        if pH_b[i] < 8.5:
-            Pnh4[i] = (-5e-8*pH_b[i]) + 2e-6   
+        if pH_b[i] <= 7:
+            Pnh4[i] = (-5e-8*pH_b[i]) + 2e-6            #Dow Filmtec XLE
         else:
             Pnh4[i] = 1.2e-6
         
@@ -626,6 +626,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         """Permeation of alkalinity due to NH4 diffusion electromigration"""
         num1 = NH4_m * Pnh4[i]
         NH4_p = num1/(denum1+denum2)
+        #print(NH4_p, NH3_p)
         
         """Weak-acid species mass balance in the permeate"""
 
@@ -672,14 +673,14 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Ntb[i+1] = (Ntb[i]*(1-r[i]) - dr*Ntp[i])/(1-r[i+1])
             Alkb[i+1] = (Alkb[i]*(1-r[i]) - dr*Alkp[i])/(1-r[i+1])
 
-    for i in range(len(r)):
-        Ntp_Accum[i] = np.average(Ntp[0:i+1])
+    for j in range(len(r)):
+        Ntp_Accum[j] = np.average(Ntp[0:j+1])
     Ntp_Accum_mgl = 14011*Ntp_Accum
                  
     #print(Pnh4)
  
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl,d_CaPhosphate, SI_Armp_CaPhosphate,Pnh4
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate
 
     
 
