@@ -77,7 +77,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     dr = r[1] - r[0]    # step size
     d = d_mil * 2.54e-5;    Pbar = np.zeros(len(r))    
     S = np.zeros(len(r));   Cb = np.zeros(len(r))
-
+    osmotic_pressure = np.zeros(len(r))
     S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Fe * 55.845 + P * 30.974)
     Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Fe + P + Ct_feed + Nt_feed/14011)
     
@@ -336,7 +336,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [1.01, 1.5, 5.2 ]
-        pressure_boost = [1.01, 1.5, 5.2]
+        pressure_boost = [0.9, 1.5, 5.2]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -392,7 +392,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             CF[i] = Cm[i]/Cb[0]       #concentration factor (CF) for the i-th stage of the reverse osmosis process            
             kphi=kphi+1
 
-
+            osmotic_pressure[i] = (PHI * Cm[i] - 0.98 * Cp[i]) * T *0.083145
         if r[i]< recovery/100:       #checks if the current recovery rate r[i] is less than the target recovery rate 
             Cb[i+1] = (Cb[i]*(1-r[i]) - dr*Cp[i])/(1-r[i+1])          
         CFb[i] = Cb[i]/Cb[0]
@@ -430,6 +430,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             USE solution 1
             REACTION_PRESSURE 1
             %f
+            EQUILIBRIUM_PHASES 1
+                Ca3(PO4)2(beta) 0 0
             SELECTED_OUTPUT
             -reset    false
             -high_precision     true
@@ -437,9 +439,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
                 CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4
             -saturation_indices  Ca3(PO4)2(beta)
-            -equilibrium_phases  Ca3(PO4)2(beta) 
-            EQUILIBRIUM_PHASES 1
-                Ca3(PO4)2(beta) 0 0        
+            -equilibrium_phases  Ca3(PO4)2(beta)         
             END"""%(t,feed_pH,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
         
         
@@ -451,7 +451,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         HPO4_2_b[i] = sol_bulk_minteq[1][5];  H2PO4_b[i] = sol_bulk_minteq[1][6]; H3PO4_b[i] =sol_bulk_minteq[1][7]
         #print(pH_b)
         NH3_b[i] = sol_bulk_minteq[1][9]
-        OH_b=sol_bulk_minteq[1][10]; H_b=sol_bulk_minteq[1][11]; MgOH_b=sol_bulk_minteq[1][12]; HSO4_b = sol_bulk_minteq[1][13]; MgCO3_b = sol_bulk_minteq[1][14]; m_NH4SO4_b = sol_bulk_minteq[1][15]
+        OH_b=sol_bulk_minteq[1][10]; H_b=sol_bulk_minteq[1][11]; MgOH_b=sol_bulk_minteq[1][12]; HSO4_b = sol_bulk_minteq[1][13]; MgCO3_b = sol_bulk_minteq[1][14]; NH4SO4_b = sol_bulk_minteq[1][15]
         MgPO4_b =sol_bulk_minteq[1][16]; CaHCO3_b = sol_bulk_minteq[1][17]; NaHCO3_b = sol_bulk_minteq[1][18]; CaCO3_b = sol_bulk_minteq[1][19]; MgHCO3_b = sol_bulk_minteq[1][20]; 
         NaCO3_b = sol_bulk_minteq[1][21];   FeHCO3_b = sol_bulk_minteq[1][22]
         CaHPO4_b =sol_bulk_minteq[1][23]  ; FeHPO4_b =sol_bulk_minteq[1][24] ; KHPO4_b = sol_bulk_minteq[1][25] ; MgHPO4_b = sol_bulk_minteq[1][26] ; NaHPO4_b = sol_bulk_minteq[1][27]; FeHPO4_b1 = sol_bulk_minteq[1][28]
@@ -459,12 +459,12 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         CaNH3_2b = sol_bulk_minteq[1][33]; CaNH322_b = sol_bulk_minteq[1][34]
         CaOH_b = sol_bulk_minteq[1][35];  FeOH_b = sol_bulk_minteq[1][36]; Fe_OH_2b = sol_bulk_minteq[1][37]; Fe_OH_3_b = sol_bulk_minteq[1][38];  Fe_OH_4_b = sol_bulk_minteq[1][39];  FeOH_2b = sol_bulk_minteq[1][40];  Fe2_OH_2_4b = sol_bulk_minteq[1][41] 
         
-        d_CaPhosphate[i] = sol_bulk_minteq[1][43]; SI_Armp_CaPhosphate[i] = sol_bulk_minteq[1][44]
-        print(SI_Armp_CaPhosphate)
+        d_CaPhosphate[i] = sol_bulk_minteq[2][43]; SI_Armp_CaPhosphate[i] = sol_bulk_minteq[1][44]
+        #print(SI_Armp_CaPhosphate)
         "Summing Ion-pairs"
         OH_bt = OH_b + MgOH_b + CaOH_b + FeOH_b + Fe_OH_2b + Fe_OH_3_b + Fe_OH_4_b + FeOH_2b + Fe2_OH_2_4b
         H_bt = H_b + HSO4_b 
-        HCO3_bt[100] = HCO3_b[i] + CaHCO3_b + NaHCO3_b + MgHCO3_b + FeHCO3_b 
+        HCO3_bt[i] = HCO3_b[i] + CaHCO3_b + NaHCO3_b + MgHCO3_b + FeHCO3_b 
         CO3_b[i] = Ctb[i] - HCO3_bt[i] - CO2_b[i]
 
         HPO4_2_bt[i] = HPO4_2_b[i] +  CaHPO4_b + FeHPO4_b + KHPO4_b + MgHPO4_b +  NaHPO4_b + FeHPO4_b1
@@ -589,13 +589,13 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         HPO4_2_m = sol_film_minteq[2][5];  H2PO4_m = sol_film_minteq[2][6]; H3PO4_m =sol_film_minteq[2][7]
         #print(pH_b)
         NH3_m = sol_film_minteq[2][9]
-        OH_m=sol_film_minteq[2][10]; H_m=sol_film_minteq[2][11]; MgOH_m=sol_film_minteq[2][12]; HSO4_m = sol_film_minteq[2][13]; MgCO3_m = sol_film_minteq[2][14]
-        MgPO4_m =sol_film_minteq[2][15]; CaHCO3_m = sol_film_minteq[2][16]; NaHCO3_m = sol_film_minteq[2][17]; CaCO3_m = sol_film_minteq[2][18]; MgHCO3_m = sol_film_minteq[2][19]; 
-        NaCO3_m = sol_film_minteq[2][20];   FeHCO3_m = sol_film_minteq[2][21]
-        CaHPO4_m =sol_film_minteq[2][22]  ; FeHPO4_m =sol_film_minteq[2][23] ; KHPO4_m = sol_film_minteq[2][24] ; MgHPO4_m = sol_film_minteq[2][25] ; NaHPO4_m = sol_film_minteq[2][26]; FeHPO4_m1 = sol_film_minteq[2][27]
-        CaH2PO4_m = sol_film_minteq[2][28]; FeH2PO4_m = sol_film_minteq[2][29]; FeH2PO42_m = sol_film_minteq[2][30];  MgH2PO4_m = sol_film_minteq[2][31]
-        CaNH3_2m = sol_film_minteq[2][32]; CaNH322_m = sol_film_minteq[2][33]
-        CaOH_m = sol_film_minteq[2][34];  FeOH_m = sol_film_minteq[2][35]; Fe_OH_2m = sol_film_minteq[2][36]; Fe_OH_3_m = sol_film_minteq[2][37];  Fe_OH_4_m = sol_film_minteq[2][38];  FeOH_2m = sol_film_minteq[2][39];  Fe2_OH_2_4m = sol_film_minteq[2][40] 
+        OH_m=sol_film_minteq[2][10]; H_m=sol_film_minteq[2][11]; MgOH_m=sol_film_minteq[2][12]; HSO4_m = sol_film_minteq[2][13]; MgCO3_m = sol_film_minteq[2][14]; NH4SO4_m = sol_film_minteq[2][15]
+        MgPO4_m =sol_film_minteq[2][16]; CaHCO3_m = sol_film_minteq[2][17]; NaHCO3_m = sol_film_minteq[2][18]; CaCO3_m = sol_film_minteq[2][19]; MgHCO3_m = sol_film_minteq[2][20]; 
+        NaCO3_m = sol_film_minteq[2][21];   FeHCO3_m = sol_film_minteq[2][22]
+        CaHPO4_m =sol_film_minteq[2][23]  ; FeHPO4_m =sol_film_minteq[2][24] ; KHPO4_m = sol_film_minteq[2][25] ; MgHPO4_m = sol_film_minteq[2][26] ; NaHPO4_m = sol_film_minteq[2][27]; FeHPO4_m1 = sol_film_minteq[2][28]
+        CaH2PO4_m = sol_film_minteq[2][29]; FeH2PO4_m = sol_film_minteq[2][30]; FeH2PO42_m = sol_film_minteq[2][31];  MgH2PO4_m = sol_film_minteq[2][32]
+        CaNH3_2m = sol_film_minteq[2][33]; CaNH322_m = sol_film_minteq[2][34]
+        CaOH_m = sol_film_minteq[2][35];  FeOH_m = sol_film_minteq[2][36]; Fe_OH_2m = sol_film_minteq[2][37]; Fe_OH_3_m = sol_film_minteq[2][38];  Fe_OH_4_m = sol_film_minteq[2][39];  FeOH_2m = sol_film_minteq[2][40];  Fe2_OH_2_4m = sol_film_minteq[2][41] 
             
         """ Summing Ion-pairs"""
         "Summing Ion-pairs"
@@ -678,9 +678,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     Ntp_Accum_mgl = 14011*Ntp_Accum
                  
     #print(Pnh4)
- 
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate
 
     
 

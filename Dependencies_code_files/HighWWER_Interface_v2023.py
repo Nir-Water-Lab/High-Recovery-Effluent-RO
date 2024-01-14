@@ -13,9 +13,13 @@ start_time = time.time()
 mw_Na = 22989.77; mw_Mg = 24305; mw_Ca = 40078 ; mw_Cl = 35453
 mw_P = 30974; mw_Si = 28086; mw_K = 39098; mw_SO4 = 96062.6; mw_Fe = 55845
 
-Ca = 43/mw_Ca;	Cl = 334/mw_Cl; K = 12/mw_K;	P = 27/mw_P
+Ca = 22/mw_Ca;	Cl = 334/mw_Cl; K = 12/mw_K;	P = 22/mw_P
 Mg = 9/mw_Mg; Na = 303/mw_Na;	Fe = 0.5/mw_Fe 
 SO4 = 10/mw_SO4; 
+
+# Ca = 22/mw_Ca;	Cl = 162/mw_Cl; K = 12/mw_K;	P = 0.1/mw_P
+# Mg = 5/mw_Mg; Na = 250/mw_Na;	Fe = 0.2/mw_Fe 
+# SO4 = 9.8/mw_SO4; 
 
 # Ca = 42.9/mw_Ca;	Cl = 118.5/mw_Cl; K = 26.33/mw_K;	P = 10.65/mw_P
 #Mg = 5.86/mw_Mg; Na = 126.1/mw_Na;	Fe = 0.5/mw_Fe 
@@ -28,8 +32,8 @@ Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
 feed_pH = 8.3 # Enter pH 
-Ct_feed = 0.00875   #0.0153  #Enter total inorganic carbon (mol/l)
-Nt_feed = 35.6 #146.4 #mg/l
+Ct_feed = 0.00875 #0.008167   #0.0153  #Enter total inorganic carbon (mol/l)
+Nt_feed = 0 #35.6 #146.4 #mg/l
 Alk_feed = 0.0029065  #eq/L ignored
 
 """Enter process operational conditions"""
@@ -41,7 +45,7 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 6.5 #Enter Pressure (bars) 
+P_feed = 6.9 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 #u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 95.0 #Enter Recovey Ratio (%)
@@ -110,7 +114,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 
 """The call for the function"""
 (r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux,
- pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage)
+ pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage)
  
 import xlsxwriter
 # Create folder
@@ -138,7 +142,7 @@ r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
 headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)',
-           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate',]
+           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate','d_CaPhosphate']
 #, , 
 
 for i, header in enumerate(headers):
@@ -172,6 +176,7 @@ for i in range(len(r)):
     worksheet.write(row,20,Ntp[i])
     worksheet.write(row,21,Ntp_Accum_mgl[i])
     worksheet.write(row,22,SI_Armp_CaPhosphate[i])
+    worksheet.write(row,23,d_CaPhosphate[i])
     
     
     #worksheet.write(row, 25, l[i])
