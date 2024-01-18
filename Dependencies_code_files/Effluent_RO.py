@@ -119,6 +119,11 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
      
     d_CaPhosphate = np.zeros(len(r))
     SI_Armp_CaPhosphate = np.zeros(len(r))
+    cp_nh4= np.zeros(len(r))
+    NH4_Cpsd=np.zeros(len(r))
+    NH4_p=np.zeros(len(r))
+    NH3_p=np.zeros(len(r))
+    NH4_sd = np.zeros(len(r))
 
 
 
@@ -475,8 +480,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         NH4_b[i] = Ntb[i] - NH3_bt[i]
 
         """Using a Linear Function to find NH4+ permeability over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
-        if pH_b[i] <= 7:
-            Pnh4[i] = (-5e-8*pH_b[i]) + 2e-6            #Dow Filmtec XLE
+        if pH_b[i] <= 7:       
+            Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.6e-8)   #Dow Filmtec XLE
         else:
             Pnh4[i] = 1.2e-6
         
@@ -514,7 +519,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             #H3PO4_p = H3PO4_b[i]
             Ptp[0] =  H2PO4_p  + H3PO4_p
             """Ammonium System"""
-            #NH4_p = (Pnh4*NH4_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Pnh4*exp(Jw[i]/k[i])) # SD Theory
+            NH4_sd[i] = (Pnh4[i]*NH4_b[0]*exp(Jw[i]/k[i]))/(Jw[0]+Pnh4[i]*exp(Jw[i]/k[i])) # SD Theory ????????????
             #NH4_p = (Pnh4* NH4_b[0] * exp((Jw[i]*delta)/Dt)*exp((Jw[i]*theta_delta)/k[i]))/(denum1 + denum2) #SDEF
             #NH3_p = NH3_b[i]
             #NH3_p=  (Pco2 *NH3_bt[0] *exp(Jw[i]/k[i]))/(Jw[0]+Pco2*exp(Jw[i]/k[i]))      #Assuming same  permeability as C02
@@ -533,7 +538,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         """Estimation of weak acid species concentration in the film layer"""
         HCO3_m=HCO3_p+(HCO3_bt[i]-HCO3_p)*exp(Jw[i]/k[i]) 
         H2PO4_m = H2PO4_p + (H2PO4_bt[i] - H2PO4_p)*exp(Jw[i]/k[i])
-        #NH4_m = NH4_p + (NH4_b[i] - NH4_p)*exp(Jw[i]/k[i]) #
+        NH4_Cpsd[i] = NH4_sd[i] + (NH4_b[i] - NH4_sd[i])*exp(Jw[i]/k[i]) #
         """NH4_m using RO Case for trace ion CP;Analytical solution for trace ion CP"""
         #Ds_cat = 1.334e-9 #Diffusion Coeff. Na
         #Ds_an = 2.031e-9  #Diffusion Coeff. Cl
@@ -542,7 +547,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         #Dt = 1.98e-9           #Diffusion coef. of NH4+ 
         #theta_delta = (Ds_cat - Ds_an)/(zs_cat * Ds_cat - zs_an * Ds_an)
         NH4_m = NH4_b[i] * exp((Jw[i]*delta)/Dt)*exp((Jw[i]*theta_delta)/k[i])
-
+        cp_nh4[i] = NH4_m
         OH_m = OH_p+(OH_bt-OH_p)*exp(Jw[i]/(3.34*k[i]))   ## ?????
         H_m = H_p+(H_bt-H_p)*exp(Jw[i]/(5.62*k[i])) 
 
@@ -550,7 +555,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         Ctm = CO3_m + HCO3_m + CO2_m 
         Ptm = PO4_3_m + HPO4_2_m+ H2PO4_m + H3PO4_m
         Ntm = NH4_m + NH3_m 
-        #print(HPO4_2_m, H2PO4_m, H3PO4_m, PO4_3_m)
+        #print(NH4_m, NH3_m)
         """Alkalinity mass balance in the film layer""" 
         Alkm= HCO3_m + (2*CO3_m) - H3PO4_m +  HPO4_2_m + (2 * PO4_3_m) + NH3_m +  OH_m - H_m   
         #print(Alkm)
@@ -608,32 +613,32 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         PO4_3_m = Ptm - HPO4_2_mt - H2PO4_mt - H3PO4_m
         NH3_mt = NH3_m + CaNH3_2m + CaNH322_m
         NH4_m = Ntm - NH3_mt
-            
+        #print(NH4_m, NH3_mt)
 
         """Permeate concentrations of Ammonium, carbonate and phosphate species"""
         HCO3_p= (Ps*HCO3_mt)/(Jw[i]+Ps)
         #CO2_p= (Pco2*CO2_m)/(Jw[i]+Pco2)
         H2PO4_p = (Ps*H2PO4_mt)/(Jw[i]+Ps)
-        #NH4_p = (Pnh4*NH4_m)/(Jw[i]+Pnh4)
+        NH4_sd[i] = (Pnh4[i]*NH4_Cpsd[i])/(Jw[i]+Pnh4[i])
         #kk=kk+1
         H2CO3_p = (Pco2*H2CO3_m)/(Jw[i]+Pco2)
         H3PO4_p = (Ps*H3PO4_m)/(Jw[i]+Ps)
-        NH3_p = (Pco2*NH3_mt)/(Jw[i]+Pco2)
+        NH3_p[i] = (Pco2*NH3_mt)/(Jw[i]+Pco2)
         # H2CO3_p = H2CO3_m
         # H3PO4_p = H3PO4_m
         # NH3_p = NH3_m
 
         """Permeation of alkalinity due to NH4 diffusion electromigration"""
         num1 = NH4_m * Pnh4[i]
-        NH4_p = num1/(denum1+denum2)
+        NH4_p[i] = num1/(denum1+denum2)
         #print(NH4_p, NH3_p)
         
         """Weak-acid species mass balance in the permeate"""
 
         Ctp[i] = HCO3_p + H2CO3_p     
         Ptp[i] = H2PO4_p + H3PO4_p
-        Ntp[i] = NH4_p + NH3_p
-        Alkp[i]= HCO3_p - H3PO4_p + NH3_p + OH_p - H_p     #Alkalinity mass balance in the permeate
+        Ntp[i] = NH4_p[i] + NH3_p[i]
+        Alkp[i]= HCO3_p - H3PO4_p + NH3_p[i] + OH_p - H_p     #Alkalinity mass balance in the permeate
 
 
         permeate_speciation = """
@@ -659,7 +664,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         pH_p[i]=sol_permeate_minteq[1][0];  
         HCO3_p=sol_permeate_minteq[1][1]; H2CO3_p=sol_permeate_minteq[1][2]; CO3_p = sol_permeate_minteq[1][3];  OH_p=sol_permeate_minteq[1][4]; H_p=sol_permeate_minteq[1][5]; 
         PO4_3_p =sol_permeate_minteq[1][6]; HPO4_2_p = sol_permeate_minteq[1][7];  H2PO4_p = sol_permeate_minteq[1][8]; H3PO4_p =sol_permeate_minteq[1][9]
-        NH4_p = sol_permeate_minteq[1][10]; NH3_p = sol_permeate_minteq[1][11]; NaHCO3_p = sol_permeate_minteq[1][12]; NaCO3_p = sol_permeate_minteq[1][13]; NaHPO4_p = sol_permeate_minteq[1][14]
+        NH4_p1 = sol_permeate_minteq[1][10]; NH3_p1 = sol_permeate_minteq[1][11]; NaHCO3_p = sol_permeate_minteq[1][12]; NaCO3_p = sol_permeate_minteq[1][13]; NaHPO4_p = sol_permeate_minteq[1][14]
 
         """Summing Ion-pairs"""
         HCO3_p = sol_permeate_minteq[1][1] + NaHCO3_p
@@ -673,13 +678,15 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Ntb[i+1] = (Ntb[i]*(1-r[i]) - dr*Ntp[i])/(1-r[i+1])
             Alkb[i+1] = (Alkb[i]*(1-r[i]) - dr*Alkp[i])/(1-r[i+1])
 
+        #print(NH4_p,Pnh4)
+
     for j in range(len(r)):
         Ntp_Accum[j] = np.average(Ntp[0:j+1])
     Ntp_Accum_mgl = 14011*Ntp_Accum
                  
-    #print(Pnh4)
+    
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate, cp_nh4,NH4_Cpsd, NH4_p, NH3_p,NH4_sd, Pnh4
 
     
 
