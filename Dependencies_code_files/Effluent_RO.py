@@ -115,7 +115,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
 
     Pnh4 = np.zeros(len(r))  #Pnh4 Ammonium ion permeability
     theta_m = np.zeros(len(r))
-    """SI """
+
+    """SI and PP """
      
     d_CaPhosphate = np.zeros(len(r))
     SI_Armp_CaPhosphate = np.zeros(len(r))
@@ -124,6 +125,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     NH4_p=np.zeros(len(r))
     NH3_p=np.zeros(len(r))
     NH4_sd = np.zeros(len(r))
+    d_Calcite = np.zeros(len(r)); d_Brucite = np.zeros(len(r)); SI_Brucite = np.zeros(len(r));  SI_Calcite= np.zeros(len(r))
 
 
 
@@ -341,7 +343,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [1.01, 1.5, 5.2 ]
-        pressure_boost = [0.9, 1.5, 5.2]
+        pressure_boost = [0.8, 1.3, 5.0]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -437,14 +439,16 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             %f
             EQUILIBRIUM_PHASES 1
                 Ca3(PO4)2(beta) 0 0
+                Brucite         0 0
+                Calcite         0 0
             SELECTED_OUTPUT
             -reset    false
             -high_precision     true
             -ph       true
             -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
                 CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4
-            -saturation_indices  Ca3(PO4)2(beta)
-            -equilibrium_phases  Ca3(PO4)2(beta)         
+            -saturation_indices  Ca3(PO4)2(beta)  Brucite  Calcite
+            -equilibrium_phases  Ca3(PO4)2(beta)  Brucite  Calcite     
             END"""%(t,feed_pH,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
         
         
@@ -463,8 +467,10 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         CaH2PO4_b = sol_bulk_minteq[1][29]; FeH2PO4_b = sol_bulk_minteq[1][30]; FeH2PO42_b = sol_bulk_minteq[1][31];  MgH2PO4_b = sol_bulk_minteq[1][32]
         CaNH3_2b = sol_bulk_minteq[1][33]; CaNH322_b = sol_bulk_minteq[1][34]
         CaOH_b = sol_bulk_minteq[1][35];  FeOH_b = sol_bulk_minteq[1][36]; Fe_OH_2b = sol_bulk_minteq[1][37]; Fe_OH_3_b = sol_bulk_minteq[1][38];  Fe_OH_4_b = sol_bulk_minteq[1][39];  FeOH_2b = sol_bulk_minteq[1][40];  Fe2_OH_2_4b = sol_bulk_minteq[1][41] 
+        """SI and PP of Inorganic salts"""
+        d_CaPhosphate[i] = sol_bulk_minteq[2][43]; d_Brucite[i] = sol_bulk_minteq[2][45]; d_Calcite[i] = sol_bulk_minteq[2][47] 
+        SI_Armp_CaPhosphate[i] = sol_bulk_minteq[1][48]; SI_Brucite[i] = sol_bulk_minteq[1][49]; SI_Calcite[i] = sol_bulk_minteq[1][50]
         
-        d_CaPhosphate[i] = sol_bulk_minteq[2][43]; SI_Armp_CaPhosphate[i] = sol_bulk_minteq[1][44]
         #print(SI_Armp_CaPhosphate)
         "Summing Ion-pairs"
         OH_bt = OH_b + MgOH_b + CaOH_b + FeOH_b + Fe_OH_2b + Fe_OH_3_b + Fe_OH_4_b + FeOH_2b + Fe2_OH_2_4b
@@ -686,7 +692,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                  
     
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate, cp_nh4,NH4_Cpsd, NH4_p, NH3_p,NH4_sd, Pnh4
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite, d_Brucite, SI_Brucite,  SI_Calcite, cp_nh4,NH4_Cpsd, NH4_p, NH3_p,NH4_sd, Pnh4
 
     
 
