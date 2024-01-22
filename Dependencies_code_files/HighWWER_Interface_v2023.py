@@ -35,7 +35,7 @@ feed_pH : pH, feed (float)
 Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
-feed_pH = 5.7 # Enter pH 
+feed_pH = 8.3 # Enter pH 
 Ct_feed = 0.008167  #0.00875  #0.0153  #Enter total inorganic carbon (mol/l)
 Nt_feed = 2.0 #146.4 #mg/l
 Alk_feed = 0.0 #eq/L ignored
@@ -118,7 +118,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 
 """The call for the function"""
 (r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux,
- pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite, d_Brucite, SI_Brucite,  SI_Calcite,cp_nh4,NH4_Cpsd, NH4_p, NH3_p,NH4_sd, Pnh4)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage)
+ pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite,  SI_Calcite)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage)
  
 import xlsxwriter
 # Create folder
@@ -146,7 +146,7 @@ r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
 headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)',
-           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate','d_CaPhosphate','d_Calcite', 'd_Brucite', 'SI_Brucite',  'SI_Calcite','cp_nh4','NH4_Cpsd', 'NH4_p', 'NH3_p','NH4_Psd', 'Pnh4']
+           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate','d_CaPhosphate','d_Calcite',  'SI_Calcite']
 #, , 
 
 for i, header in enumerate(headers):
@@ -181,16 +181,10 @@ for i in range(len(r)):
     worksheet.write(row,21,Ntp_Accum_mgl[i])
     worksheet.write(row,22,SI_Armp_CaPhosphate[i])
     worksheet.write(row,23,d_CaPhosphate[i])
-    worksheet.write(row,24, d_Calcite[i]) 
-    worksheet.write(row,25,d_Brucite[i])
-    worksheet.write(row,26,SI_Brucite[i])  
-    worksheet.write(row,27,SI_Calcite[i])
-    worksheet.write(row,28, cp_nh4[i])
-    worksheet.write(row,29,NH4_Cpsd[i])
-    worksheet.write(row,30,NH4_p[i])
-    worksheet.write(row,31,NH3_p[i])
-    worksheet.write(row,32,NH4_sd[i])
-    worksheet.write(row,33,Pnh4[i])
+    worksheet.write(row,24, d_Calcite[i])   
+    worksheet.write(row,25,SI_Calcite[i])
+
+    
     
     
     #worksheet.write(row, 25, l[i])
