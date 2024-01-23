@@ -336,7 +336,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [1.01, 1.5, 5.2 ]
-        pressure_boost = [0.8, 1.3, 5.0]
+        pressure_boost = [0.85, 3.6, 5.0]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -479,10 +479,15 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         NH4_b[i] = Ntb[i] - NH3_bt[i]
 
         """Using a Linear Function to find NH4+ permeability over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
-        if pH_b[i] <= 7:       
-            Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.6e-8)   #Dow Filmtec XLE
-        else:
-            Pnh4[i] = 1.2e-6
+        if i <= second_stage and pH_b[i] < 7:
+            Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.48e-8)   #Dow Filmtec XLE
+        elif i > second_stage and pH_b[i] < 7:
+            Pnh4[i] = 6.63e-7 + (pH_b[i] - 4.5)*(8.72e-8)     #BW30LE
+        elif i <= second_stage and pH_b[i] > 7:
+            Pnh4[i] = 1.2e-6                        #Dow Filmtec XLE
+        elif i > second_stage and pH_b[i] > 7:
+            Pnh4[i] = 8.81e-7                   #BW30LE
+            
         
     
         """Resolving Cpt using SDEF theory"""
