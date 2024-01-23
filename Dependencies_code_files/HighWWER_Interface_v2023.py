@@ -8,7 +8,6 @@ start_time = time.time()
 
 
 
-
 """Enter major ions concentrations in mol/l"""
 mw_Na = 22989.77; mw_Mg = 24305; mw_Ca = 40078 ; mw_Cl = 35453
 mw_P = 30974; mw_Si = 28086; mw_K = 39098; mw_SO4 = 96062.6; mw_Fe = 55845
@@ -17,17 +16,17 @@ mw_P = 30974; mw_Si = 28086; mw_K = 39098; mw_SO4 = 96062.6; mw_Fe = 55845
 # Mg = 9/mw_Mg; Na = 303/mw_Na;	Fe = 0.0/mw_Fe                      #P_Unrecovered
 # SO4 = 10/mw_SO4; 
 
-# Ca = 22/mw_Ca;	Cl = 162/mw_Cl; K = 12/mw_K;	P = 0.1/mw_P
-# Mg = 5/mw_Mg; Na = 250/mw_Na;	Fe = 0.0/mw_Fe                      #P_recovered
-# SO4 = 9.8/mw_SO4; 
+Ca = 22/mw_Ca;	Cl = 162/mw_Cl; K = 12/mw_K;	P = 0.1/mw_P
+Mg = 5/mw_Mg; Na = 250/mw_Na;	Fe = 0.0/mw_Fe                      #P_recovered
+SO4 = 9.8/mw_SO4; 
 
 # Ca = 38.41/mw_Ca;	Cl = 123.13/mw_Cl; K = 22.51/mw_K;	P = 9.88/mw_P
 # Mg = 7.7/mw_Mg; Na = 131.33/mw_Na;	Fe = 0.0/mw_Fe                      #NH3 unrecovered
 # SO4 = 6.99/mw_SO4
 
-Ca = 24.24/mw_Ca;	Cl = 116.4/mw_Cl; K = 5.82/mw_K;	P = 9.88/mw_P
-Mg = 5.68/mw_Mg; Na = 386.48/mw_Na;	Fe = 0.0/mw_Fe                         #NH3 recovered  
-SO4 = 4.8/mw_SO4
+# Ca = 24.24/mw_Ca;	Cl = 116.4/mw_Cl; K = 5.82/mw_K;	P = 9.88/mw_P
+# Mg = 5.68/mw_Mg; Na = 386.48/mw_Na;	Fe = 0.0/mw_Fe                         #NH3 recovered  
+# SO4 = 4.8/mw_SO4
 """Enter acid-base parameters"""
 """
 ---------------------------------
@@ -36,8 +35,8 @@ Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
 feed_pH = 8.3 # Enter pH 
-Ct_feed = 0.008167  #0.00875  #0.0153  #Enter total inorganic carbon (mol/l)
-Nt_feed = 2.0 #146.4 #mg/l
+Ct_feed =0.008167  # 0.00875  #0.0153  #Enter total inorganic carbon (mol/l)
+Nt_feed = 36.5 #146.4 #mg/l
 Alk_feed = 0.0 #eq/L ignored
 
 """Enter process operational conditions"""
@@ -70,6 +69,11 @@ C = 5.5e-3; GR = 1.98
 alpha = - 0.422; gamma = 0.672
 sigma = 0.536; L = 7.0
 
+"""Number of Steps in the Process"""
+
+step_num = int(recovery + 1)
+r_f = recovery/100.0;   r = np.linspace(0, r_f, step_num) 
+
 """Enter Membrane Constants at 25C. If unavailable enter 0 and it will be estimated by the software according to membrane manufacturer performance report"""
 """
 --------------------------------------------
@@ -82,17 +86,23 @@ kb : Average mass transfer for uncharged (float)
 # #7.77e-8 #1.946e-8 #7.77e-8 #Enter NaCl permeabiliy (if unavailable enter 0)
 ks = 0 #2.32e-5 #2.9404e-4 #2.32e-5 #7.73e-6 #Enter average mass transfer coefficient for charged solutes (if unavailable enter 0 - value will be derived from Sherwood correlations)
 kt = 0
-Salt_Permeability = (-2E-08 * (feed_pH*feed_pH)) + (3E-07* feed_pH) - 7.3E-07    #Dow Filmtec XLE 
-Ps1 = Ps2 = Ps3 = Ps4 = Salt_Permeability
-Water_Permeability = (-5E-09 * (feed_pH*feed_pH)) + (6E-08* feed_pH) + 7.68E-07     #Dow Filmtec XLE
+#Salt_Permeability1 = (-2E-08 * (feed_pH*feed_pH)) + (3E-07* feed_pH) - 7.3E-07 
+#Ps1 = Ps2 = Ps3 = Ps4 = Salt_Permeability1
+
+if feed_pH <7:
+    Salt_Permeability1 = 3.48e-7 + (feed_pH - 4.5)* 1.92e-8    # XLE 
+    Ps1 = Ps2 = Salt_Permeability1
+    Salt_Permeability2 = 2.82e-7 + (feed_pH - 4.5)* -2.7e-8     # BW30 LE
+    Ps3 = Ps4 = Salt_Permeability2
+    Water_Permeability1 = 9.56E-07 + (feed_pH - 4.5)    # XLE
+elif feed_pH >= 7:
+    Salt_Permeability1 = 3.96e-7 + (feed_pH - 7.0)* -7.07e-8
+    Salt_Permeability2 = 2.55E-7 
+    Ps3 = Ps4 = Salt_Permeability2 
+
 Pw1 = Pw2 = Pw3 = Pw4 = Water_Permeability
 
-#print(Ps1,Pw1) 
-
-# Pw1, Ps1 = 0.694e-6, 0.282e-6 #1.222e-6, 2.533e-8   #LCLE(2021), Rejection ,= 99.40 10.65e-7, 7.404e-8
-# Pw2, Ps2 = 0.694e-6, 0.282e-6 #1.208e-6, 2.414e-8  #4040-XRLE(2020), 8.65e-7,5.404e-8
-# Pw3, Ps3 = 0.694e-6, 0.282e-6 #1.817e-6, 2.56e-8  #TMG20D-440, Rejection = 99.82, 6.65e-7, 3.404e-8
-# Pw4, Ps4 = 0.694e-6, 0.282e-6 #2.05e-6, 2.439e-8  #TMH20A-440C, Rejection = 99.81, 4.65e-7, 1.404e-8
+#print(Ps1,Pw1)
 Pco2 = 1.5e-1 #Assumed Permeability of CO2
 #Pnh4 = 0.881e-6   #Permeability of NH4+
  
