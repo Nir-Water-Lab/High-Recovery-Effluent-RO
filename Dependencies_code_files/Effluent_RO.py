@@ -479,17 +479,21 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         NH4_b[i] = Ntb[i] - NH3_bt[i]
 
         """Using a Linear Function to find NH4+ permeability over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
-        if i <= second_stage and pH_b[i] < 7:
-            Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.48e-8)   #Dow Filmtec XLE
-        elif i > second_stage and pH_b[i] < 7:
+        if i <= second_stage and pH_b[i] <= 7:
+            Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.6e-8)   # XLE
+            theta_m[i] = -0.189 + (pH_b[i] - 4.5)*(0.1872)     #XLE
+        elif i > second_stage and pH_b[i] <= 7:
             Pnh4[i] = 6.63e-7 + (pH_b[i] - 4.5)*(8.72e-8)     #BW30LE
+            theta_m[i] = -0.36 + (pH_b[i]- 4.5)*0.1784        #BW30LE
         elif i <= second_stage and pH_b[i] > 7:
-            Pnh4[i] = 1.2e-6                        #Dow Filmtec XLE
+            Pnh4[i] = 1.2e-6     #XLE
+            theta_m[i] = 0.279 + (pH_b[i] -7) *0.06333 #XLE
         elif i > second_stage and pH_b[i] > 7:
             Pnh4[i] = 8.81e-7                   #BW30LE
+            theta_m[i] = 0.086 + (pH_b[i]- 7)*(-0.016)   #BW30LE
             
         
-    
+        #print(theta_m)
         """Resolving Cpt using SDEF theory"""
         omega_cat = 0.549e-6 #Na
         Omega_an = 0.310e-6 #Cl
@@ -497,15 +501,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
 
         zs_an = -1#Cl
         Rs = 1-Cp[i]/Cm[i]
-        #theta_m[i] = -0.0486* (pH_b[i]*pH_b[i]) + (0.7373*pH_b[i]) - 2.6937       #BW30LE
-        if pH_b[i] <7:
-            theta_m[i] = -0.36 + (pH_b[i]- 4.5)*0.1784
-        elif pH_b[i] >= 7:
-            theta_m[i] = 0.086 + (pH_b[i]- 7)*-0.016
-
-        #print(theta_m)
-        #theta_m[i] = -0.031* (pH_b[i]*pH_b[i]) + (0.5433*pH_b[i]) - 2.0069      # XLE
-        #theta_m[i] = -0.0323* (pH_b[i]*pH_b[i]) + (0.6078*pH_b[i]) - 2.3605       #SW30HRLE
+    
         denum1 = Pnh4[i]*(1-Rs)**(theta_m[i])
         denum2 = Jw[i]*(1-(1-Rs)**(1-theta_m[i]))/(Rs*(1-theta_m[i])) 
         """NH4_m using RO Case for trace ion CP;Analytical solution for trace ion CP"""
@@ -691,7 +687,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                  
     
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite,  SI_Calcite
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite,  SI_Calcite,Pnh4
 
     
 
