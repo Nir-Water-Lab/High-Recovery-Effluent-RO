@@ -12,14 +12,14 @@ start_time = time.time()
 mw_Na = 22989.77; mw_Mg = 24305; mw_Ca = 40078 ; mw_Cl = 35453
 mw_P = 30974; mw_Si = 28086; mw_K = 39098; mw_SO4 = 96062.6; mw_Fe = 55845
 
-# Ca = 43/mw_Ca;	Cl = 334/mw_Cl; K = 12/mw_K;	P = 27/mw_P
-# Mg = 9/mw_Mg; Na = 303/mw_Na;	Fe = 0.0/mw_Fe                      #P_Unrecovered
-# SO4 = 10/mw_SO4; 
+Ca = 43/mw_Ca;	Cl = 334/mw_Cl; K = 12/mw_K;	P = 27/mw_P
+Mg = 9/mw_Mg; Na = 303/mw_Na;	Fe = 0.0/mw_Fe                      #P_Unrecovered
+SO4 = 10/mw_SO4; 
 
-Ca = 22/mw_Ca;	Cl = 162/mw_Cl; K = 12/mw_K;	P = 0.1/mw_P
-Mg = 5/mw_Mg; Na = 250/mw_Na;	Fe = 0.0/mw_Fe                      #P_recovered
-SO4 = 9.8/mw_SO4; 
-
+# Ca = 22/mw_Ca;	Cl = 162/mw_Cl; K = 12/mw_K;	P = 0.1/mw_P
+# Mg = 5/mw_Mg; Na = 250/mw_Na;	Fe = 0.0/mw_Fe                      #P_recovered
+# SO4 = 9.8/mw_SO4; 
+# 
 # Ca = 38.41/mw_Ca;	Cl = 123.13/mw_Cl; K = 22.51/mw_K;	P = 9.88/mw_P
 # Mg = 7.7/mw_Mg; Na = 131.33/mw_Na;	Fe = 0.0/mw_Fe                      #NH3 unrecovered
 # SO4 = 6.99/mw_SO4
@@ -34,8 +34,8 @@ feed_pH : pH, feed (float)
 Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
-feed_pH = 8.3 # Enter pH 
-Ct_feed =0.008167  # 0.00875  #0.0153  #Enter total inorganic carbon (mol/l)
+feed_pH = 6.5 # Enter pH 
+Ct_feed = 0.00875  #0.008167   #0.0153  #Enter total inorganic carbon (mol/l)
 Nt_feed = 36.5 #146.4 #mg/l
 Alk_feed = 0.0 #eq/L ignored
 
@@ -77,8 +77,8 @@ r_f = recovery/100.0;   r = np.linspace(0, r_f, step_num)
 """Enter Membrane Constants at 25C. If unavailable enter 0 and it will be estimated by the software according to membrane manufacturer performance report"""
 """
 --------------------------------------------
-Pw0 : Water permeability (float)
-Ps0 : Salt permeability (float)
+Pw : Water permeability (float)
+Ps : Salt permeability (float)
 ks : Average mass transfer for charged solutes (float)
 kb : Average mass transfer for uncharged (float)
 """
@@ -91,18 +91,28 @@ kt = 0
 
 if feed_pH <7:
     Salt_Permeability1 = 3.48e-7 + (feed_pH - 4.5)* 1.92e-8    # XLE 
-    Ps1 = Ps2 = Salt_Permeability1
+    Ps1 = Ps2 = Salt_Permeability1     
     Salt_Permeability2 = 2.82e-7 + (feed_pH - 4.5)* -2.7e-8     # BW30 LE
     Ps3 = Ps4 = Salt_Permeability2
-    Water_Permeability1 = 9.56E-07 + (feed_pH - 4.5)    # XLE
+    Water_Permeability1 = 9.56e-07 + (feed_pH - 4.5)* -4.11e-9    # XLE
+    Pw1 = Pw2 = Water_Permeability1
+    Water_Permeability2 = 1.0e-6 + (feed_pH - 4.5)* -1.44e-7    # BW30LE
+    Pw3 = Pw4 = Water_Permeability2
 elif feed_pH >= 7:
-    Salt_Permeability1 = 3.96e-7 + (feed_pH - 7.0)* -7.07e-8
-    Salt_Permeability2 = 2.55E-7 
-    Ps3 = Ps4 = Salt_Permeability2 
+    Salt_Permeability1 = 3.96e-7 + (feed_pH - 7.0)* -7.07e-8    # XLE
+    Ps1 = Ps2 = Salt_Permeability1
+    Salt_Permeability2 = 2.55E-7        # BW30 LE
+    Ps3 = Ps4 = Salt_Permeability2    
+    Water_Permeability1 = 9.45e-7 + (feed_pH - 7.0)* -2.611e-8  #XLE
+    Pw1 = Pw2 = Water_Permeability1
+    Water_Permeability2 = 6.39E-7 + (feed_pH - 7.0)* 3.7e-8     #BW30 LE
+    Pw3 = Pw4 = Water_Permeability2      
 
-Pw1 = Pw2 = Pw3 = Pw4 = Water_Permeability
 
-#print(Ps1,Pw1)
+ 
+
+#print(Ps1,Ps2,Ps3, Ps4,Pw1,Pw2,Pw3, Pw4)
+
 Pco2 = 1.5e-1 #Assumed Permeability of CO2
 #Pnh4 = 0.881e-6   #Permeability of NH4+
  
