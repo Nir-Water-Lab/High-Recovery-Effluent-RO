@@ -12,15 +12,15 @@ start_time = time.time()
 mw_Na = 22989.77; mw_Mg = 24305; mw_Ca = 40078 ; mw_Cl = 35453
 mw_P = 30974; mw_Si = 28086; mw_K = 39098; mw_SO4 = 96062.6; mw_Fe = 55845
 
-Ca = 43/mw_Ca;	Cl = 334/mw_Cl; K = 12/mw_K;	P = 27/mw_P
-Mg = 9/mw_Mg; Na = 303/mw_Na;	Fe = 0.0/mw_Fe                      #P_Unrecovered
-SO4 = 10/mw_SO4; 
-
-# Ca = 22/mw_Ca;	Cl = 162/mw_Cl; K = 12/mw_K;	P = 0.1/mw_P
-# Mg = 5/mw_Mg; Na = 250/mw_Na;	Fe = 0.0/mw_Fe                      #P_recovered
-# SO4 = 9.8/mw_SO4; 
+# Ca = 43/mw_Ca;	Cl = 334/mw_Cl; K = 12/mw_K;	P = 27/mw_P
+# Mg = 9/mw_Mg; Na = 303/mw_Na;	Fe = 0.0/mw_Fe                      #P_Unrecovered
+# SO4 = 10/mw_SO4; 
 # 
-# Ca = 38.41/mw_Ca;	Cl = 123.13/mw_Cl; K = 22.51/mw_K;	P = 9.88/mw_P
+Ca = 22/mw_Ca;	Cl = 162/mw_Cl; K = 12/mw_K;	P = 0.1/mw_P
+Mg = 5/mw_Mg; Na = 250/mw_Na;	Fe = 0.0/mw_Fe                      #P_recovered
+SO4 = 9.8/mw_SO4; 
+# 
+# Ca = 38.41/mw_Ca;	Cl = 123.13/mw_Cl; K = 22.51/mw_K;	P = 0/mw_P
 # Mg = 7.7/mw_Mg; Na = 131.33/mw_Na;	Fe = 0.0/mw_Fe                      #NH3 unrecovered
 # SO4 = 6.99/mw_SO4
 
@@ -34,9 +34,9 @@ feed_pH : pH, feed (float)
 Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
-feed_pH = 6.5 # Enter pH 
-Ct_feed = 0.00875  #0.008167   #0.0153  #Enter total inorganic carbon (mol/l)
-Nt_feed = 35.6 #146.4 #mg/l
+feed_pH = 6.2 # Enter pH 
+Ct_feed = 0.008167  # 0.00875    #0.0153  #Enter total inorganic carbon (mol/l)
+Nt_feed = 35.6 #151.6 #146.4 #mg/l
 Alk_feed = 0.0 #eq/L ignored
 
 """Enter process operational conditions"""
@@ -91,22 +91,22 @@ kt = 0
 
 if feed_pH <7:
     Salt_Permeability1 = 3.48e-7 + (feed_pH - 4.5)* 1.92e-8    # XLE 
-    Ps1 = Ps2 = Salt_Permeability1     
-    Salt_Permeability2 = 2.82e-7 + (feed_pH - 4.5)* -2.7e-8     # BW30 LE
-    Ps3 = Ps4 = Salt_Permeability2
+    Ps1 = Ps2 = Ps3 = Ps4 = Salt_Permeability1     
+    # Salt_Permeability2 = 2.82e-7 + (feed_pH - 4.5)* -2.7e-8     # BW30 LE
+    # Ps3 = Ps4 = Salt_Permeability2
     Water_Permeability1 = 9.56e-07 + (feed_pH - 4.5)* -4.11e-9    # XLE
-    Pw1 = Pw2 = Water_Permeability1
-    Water_Permeability2 = 1.0e-6 + (feed_pH - 4.5)* -1.44e-7    # BW30LE
-    Pw3 = Pw4 = Water_Permeability2
+    Pw1 = Pw2 = Pw3 = Pw4 = Water_Permeability1
+    # Water_Permeability2 = 1.0e-6 + (feed_pH - 4.5)* -1.44e-7    # BW30LE
+    # Pw3 = Pw4 = Water_Permeability2
 elif feed_pH >= 7:
     Salt_Permeability1 = 3.96e-7 + (feed_pH - 7.0)* -7.07e-8    # XLE
-    Ps1 = Ps2 = Salt_Permeability1
-    Salt_Permeability2 = 2.55E-7        # BW30 LE
-    Ps3 = Ps4 = Salt_Permeability2    
+    Ps1 = Ps2 = Ps3 = Ps4 = Salt_Permeability1
+    # Salt_Permeability2 = 2.55E-7        # BW30 LE
+    # Ps3 = Ps4 = Salt_Permeability2    
     Water_Permeability1 = 9.45e-7 + (feed_pH - 7.0)* -2.611e-8  #XLE
-    Pw1 = Pw2 = Water_Permeability1
-    Water_Permeability2 = 6.39E-7 + (feed_pH - 7.0)* 3.7e-8     #BW30 LE
-    Pw3 = Pw4 = Water_Permeability2      
+    Pw1 = Pw2 = Pw3 = Pw4 = Water_Permeability1
+    # Water_Permeability2 = 6.39E-7 + (feed_pH - 7.0)* 3.7e-8     #BW30 LE
+    # Pw3 = Pw4 = Water_Permeability2      
 
 
  
@@ -138,7 +138,7 @@ d_mil = 28.0 #enter feed spacer height (mil)
 
 """The call for the function"""
 (r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux,
- pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite,  SI_Calcite,Pnh4)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage)
+ pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite,  SI_Calcite,Pnh4,osmotic_pressure,NH3_p,NH4_p)=Effluent(Ca, K, Mg, Na, Cl,SO4,P,Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage)
  
 import xlsxwriter
 # Create folder
@@ -166,7 +166,7 @@ r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
 headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)',
-           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate','d_CaPhosphate','d_Calcite',  'SI_Calcite','Pnh4']
+           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate','d_CaPhosphate','d_Calcite',  'SI_Calcite','Pnh4','osmotic_pressure','NH3_p', 'NH4_p']
 #, , 
 
 for i, header in enumerate(headers):
@@ -204,7 +204,9 @@ for i in range(len(r)):
     worksheet.write(row,24, d_Calcite[i])   
     worksheet.write(row,25,SI_Calcite[i])
     worksheet.write(row,26,Pnh4[i])
-
+    worksheet.write(row,27,osmotic_pressure[i])
+    worksheet.write(row,28,NH3_p[i])
+    worksheet.write(row,29,NH4_p[i])
     
     
     

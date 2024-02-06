@@ -111,7 +111,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
 
     #Ammonium Species
     NH4_b = np.zeros(len(r)); NH4_p = np.zeros(len(r)); NH3_b = np.zeros(len(r)); NH3_p = np.zeros(len(r))
-    NH4_bt = np.zeros(len(r)); NH3_bt = np.zeros(len(r))
+    NH3_bt = np.zeros(len(r))
 
     Pnh4 = np.zeros(len(r))  #Pnh4 Ammonium ion permeability
     theta_m = np.zeros(len(r))
@@ -225,7 +225,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Pw, Ps = Pw4, Ps4
         
         u0 = [0.17, 0.35, 0.68, 1.31, 2.83]
-        # # #Crossflow velocity corrections per stage
+        # # #Crossflow velocity corrections per stage 
         if i <= first_stage:
             U[i] = u0[0]*(1.0-r[i])
         elif first_stage < i <= second_stage:
@@ -335,8 +335,8 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             ## Concentration Polarization Modulus
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
-            #Calculating pressure per stage [1.01, 1.5, 5.2 ]
-        pressure_boost = [0.85, 3.6, 5.0]
+            #Calculating pressure per stage [1.01, 1.5, 5.2 ] 0.85, 3.6
+        pressure_boost = [0.799, 1.3, 5.0]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -432,7 +432,6 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             %f
             EQUILIBRIUM_PHASES 1
                 Ca3(PO4)2(beta) 0 0
-                Brucite         0 0
                 Calcite         0 0
             SELECTED_OUTPUT
             -reset    false
@@ -446,7 +445,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         
         
         sol_bulk_minteq = phreecalc1(bulk_speciation)
-        #print(sol_bulk_minteq)
+        print(sol_bulk_minteq)
         
         pH_b[i]=sol_bulk_minteq[1][0];  
         HCO3_b[i]=sol_bulk_minteq[1][1];  CO2_b[i]=sol_bulk_minteq[1][2] ; #CO3_b[i] = sol_bulk_minteq[2][3]
@@ -687,7 +686,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                  
     
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite,  SI_Calcite,Pnh4
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite,  SI_Calcite,Pnh4, osmotic_pressure, NH3_p, NH4_p
 
     
 
