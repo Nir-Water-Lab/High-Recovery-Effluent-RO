@@ -1,4 +1,4 @@
-def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage):
+def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage):
      
     # Import standard library modules first.
     #import sys
@@ -79,7 +79,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     S = np.zeros(len(r));   Cb = np.zeros(len(r))
     osmotic_pressure = np.zeros(len(r))
     S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Fe * 55.845 + P * 30.974)
-    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Fe + P + N_3 + N_5)
+    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Fe + P + NO3 + Nt_feed/14011)
     
     
     Cp = np.zeros(len(r));  Cm = np.zeros(len(r))
@@ -114,6 +114,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     NH3_bt = np.zeros(len(r))
 
     Pnh4 = np.zeros(len(r))  #Pnh4 Ammonium ion permeability
+    Pno3 = np.zeros(len(r)) #Pno3 Nitrate permeability
     theta_m = np.zeros(len(r))
 
     """SI and PP """
@@ -179,8 +180,9 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             S(6)      %e
             Fe       %e
             P        %e
+            N(5)     %e
             N(-3)        %f mg/l
-            C(4)        %e
+            Alkalinity  %f mg/l
             USE solution 1
             USER_PUNCH
             -headings ALK Ct Pt Nt  RHO  
@@ -194,7 +196,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             SELECTED_OUTPUT
             -reset          false
             -user_punch     true
-            END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Fe,P,Nt_feed,Ct_feed)
+            END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Fe,P,NO3,Nt_feed,Alk_feed)
     #sol_feed = phreecalc(Feed)
      
     sol_feed_minteq = phreecalc1(Feed)
@@ -423,9 +425,10 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             K           %e 
             Ca          %e 
             Fe          %e
+            N(-3)       %e
             C(4)        %e
             P           %e
-            N(-3)       %e
+            N(5)        %e
             Alkalinity  %e
             USE solution 1
             REACTION_PRESSURE 1
@@ -438,14 +441,15 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             -high_precision     true
             -ph       true
             -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
-                CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4
+                CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4 
+                NO3- CaNO3+             
             -saturation_indices  Ca3(PO4)2(beta)   Calcite
             -equilibrium_phases  Ca3(PO4)2(beta)   Calcite     
-            END"""%(t,feed_pH,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
+            END"""%(t,feed_pH,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),NO3/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
         
         
         sol_bulk_minteq = phreecalc1(bulk_speciation)
-        print(sol_bulk_minteq)
+        #print(sol_bulk_minteq)
         
         pH_b[i]=sol_bulk_minteq[1][0];  
         HCO3_b[i]=sol_bulk_minteq[1][1];  CO2_b[i]=sol_bulk_minteq[1][2] ; #CO3_b[i] = sol_bulk_minteq[2][3]
@@ -458,10 +462,11 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         CaHPO4_b =sol_bulk_minteq[1][23]  ; FeHPO4_b =sol_bulk_minteq[1][24] ; KHPO4_b = sol_bulk_minteq[1][25] ; MgHPO4_b = sol_bulk_minteq[1][26] ; NaHPO4_b = sol_bulk_minteq[1][27]; FeHPO4_b1 = sol_bulk_minteq[1][28]
         CaH2PO4_b = sol_bulk_minteq[1][29]; FeH2PO4_b = sol_bulk_minteq[1][30]; FeH2PO42_b = sol_bulk_minteq[1][31];  MgH2PO4_b = sol_bulk_minteq[1][32]
         CaNH3_2b = sol_bulk_minteq[1][33]; CaNH322_b = sol_bulk_minteq[1][34]
-        CaOH_b = sol_bulk_minteq[1][35];  FeOH_b = sol_bulk_minteq[1][36]; Fe_OH_2b = sol_bulk_minteq[1][37]; Fe_OH_3_b = sol_bulk_minteq[1][38];  Fe_OH_4_b = sol_bulk_minteq[1][39];  FeOH_2b = sol_bulk_minteq[1][40];  Fe2_OH_2_4b = sol_bulk_minteq[1][41] 
+        CaOH_b = sol_bulk_minteq[1][35];  FeOH_b = sol_bulk_minteq[1][36]; Fe_OH_2b = sol_bulk_minteq[1][37]; Fe_OH_3_b = sol_bulk_minteq[1][38];  Fe_OH_4_b = sol_bulk_minteq[1][39];  FeOH_2b = sol_bulk_minteq[1][40];  
+        Fe2_OH_2_4b = sol_bulk_minteq[1][41]; NO3_b = sol_bulk_minteq[1][42]; CaNO3_b = sol_bulk_minteq[1][43] 
         """SI and PP of Inorganic salts"""
-        d_CaPhosphate[i] = sol_bulk_minteq[2][43]; d_Calcite[i] = sol_bulk_minteq[2][45] 
-        SI_Armp_CaPhosphate[i] = sol_bulk_minteq[1][46]; SI_Calcite[i] = sol_bulk_minteq[1][47]
+        d_CaPhosphate[i] = sol_bulk_minteq[2][45]; d_Calcite[i] = sol_bulk_minteq[2][47] 
+        SI_Armp_CaPhosphate[i] = sol_bulk_minteq[1][48]; SI_Calcite[i] = sol_bulk_minteq[1][49]
         
         #print(SI_Armp_CaPhosphate)
         "Summing Ion-pairs"
@@ -476,19 +481,25 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
 
         NH3_bt[i] = NH3_b[i] + CaNH3_2b + CaNH322_b
         NH4_b[i] = Ntb[i] - NH3_bt[i]
-
-        """Using a Linear Function to find NH4+ permeability over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
+        NO3_bt = NO3_b + CaNO3_b
+        
+        #print(NO3_bt)
+        """Using a Linear Function to find NH4+ and NO3 permeability  & Theta_M over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
         if i <= second_stage and pH_b[i] <= 7:
             Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.6e-8)   # XLE
+            Pno3[i] = 9.83e-7 + (pH_b[i] - 4.5)*(1.27e-7)  #XLE
             theta_m[i] = -0.189 + (pH_b[i] - 4.5)*(0.1872)     #XLE
         elif i > second_stage and pH_b[i] <= 7:
             Pnh4[i] = 6.63e-7 + (pH_b[i] - 4.5)*(8.72e-8)     #BW30LE
+            Pno3[i] = 1.09e-6 + (pH_b[i] - 4.5)*(-2.42e-7)    #BW30LE
             theta_m[i] = -0.36 + (pH_b[i]- 4.5)*0.1784        #BW30LE
         elif i <= second_stage and pH_b[i] > 7:
             Pnh4[i] = 1.2e-6     #XLE
+            Pno3[i] = 1.3e-6 + (pH_b[i] - 7)*-2.5e-7  #XLE
             theta_m[i] = 0.279 + (pH_b[i] -7) *0.06333 #XLE
         elif i > second_stage and pH_b[i] > 7:
             Pnh4[i] = 8.81e-7                   #BW30LE
+            Pno3[i] = 4.85e-7 + (pH_b[i] -7)*8.0e-9 #BW30LE
             theta_m[i] = 0.086 + (pH_b[i]- 7)*(-0.016)   #BW30LE
             
         
