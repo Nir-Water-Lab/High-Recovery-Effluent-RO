@@ -113,6 +113,10 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
     NH4_b = np.zeros(len(r)); NH4_p = np.zeros(len(r)); NH3_b = np.zeros(len(r)); NH3_p = np.zeros(len(r))
     NH3_bt = np.zeros(len(r))
 
+    #Nitrate Species
+    NO3_tb = np.zeros(len(r))
+    NO3_tp = np.zeros(len(r))
+    
     Pnh4 = np.zeros(len(r))  #Pnh4 Ammonium ion permeability
     Pno3 = np.zeros(len(r)) #Pno3 Nitrate permeability
     theta_m = np.zeros(len(r))
@@ -185,13 +189,14 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             Alkalinity  %f mg/l
             USE solution 1
             USER_PUNCH
-            -headings ALK Ct Pt Nt  RHO  
+            -headings ALK Ct Pt Nt NO3 RHO  
             -start           
             10 PUNCH ALK
             20 PUNCH TOT("C")
             30 PUNCH TOT("P")
             40 PUNCH TOT("N")
-            50 PUNCH RHO
+            50 PUNCH TOT("N(5)")
+            60 PUNCH RHO
              -end
             SELECTED_OUTPUT
             -reset          false
@@ -208,10 +213,9 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
     Ctb[0]=sol_feed_minteq[1][1] 
     Ptb[0]=sol_feed_minteq[1][2]
     Ntb[0]= sol_feed_minteq[1][3]
-    rho= sol_feed_minteq[1][4]
+    NO3_tb[0] = sol_feed_minteq[1][4]
+    rho= sol_feed_minteq[1][5]
     
-    
-
     
     
     # assign Pw and Ps values based on the stage
@@ -425,10 +429,10 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             K           %e 
             Ca          %e 
             Fe          %e
+            N(5)        %e
             N(-3)       %e
             C(4)        %e
             P           %e
-            N(5)        %e
             Alkalinity  %e
             USE solution 1
             REACTION_PRESSURE 1
@@ -445,7 +449,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
                 NO3- CaNO3+             
             -saturation_indices  Ca3(PO4)2(beta)   Calcite
             -equilibrium_phases  Ca3(PO4)2(beta)   Calcite     
-            END"""%(t,feed_pH,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),NO3/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
+            END"""%(t,feed_pH,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),NO3_tb[i],Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
         
         
         sol_bulk_minteq = phreecalc1(bulk_speciation)
@@ -481,9 +485,9 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
 
         NH3_bt[i] = NH3_b[i] + CaNH3_2b + CaNH322_b
         NH4_b[i] = Ntb[i] - NH3_bt[i]
-        NO3_bt = NO3_b + CaNO3_b
+        NO3_b1 = NO3_b + CaNO3_b
+
         
-        #print(NO3_bt)
         """Using a Linear Function to find NH4+ and NO3 permeability  & Theta_M over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
         if i <= second_stage and pH_b[i] <= 7:
             Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.6e-8)   # XLE
@@ -514,12 +518,14 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
     
         denum1 = Pnh4[i]*(1-Rs)**(theta_m[i])
         denum2 = Jw[i]*(1-(1-Rs)**(1-theta_m[i]))/(Rs*(1-theta_m[i])) 
+        denum3 = Pno3[i]*(1-Rs)**(theta_m[i])
         """NH4_m using RO Case for trace ion CP;Analytical solution for trace ion CP"""
         Ds_cat = 1.334e-9 #Diffusion Coeff. Na
         Ds_an = 2.031e-9  #Diffusion Coeff. Cl
         Ds = ((zs_cat - zs_an)* (Ds_cat*Ds_an))/(zs_cat*Ds_cat - zs_an*Ds_an) #Diffusion coefficient of the dominant salt
         delta = Ds/k[i]        #Boundary layer thickness
-        Dt = 1.98e-9           #Diffusion coef. of NH4+ 
+        Dt_NH4 = 1.98e-9           #Diffusion coef. of NH4+ 
+        Dt_NO3 =  1.9e-09             # Diffusion coef. of NH4+
         theta_delta = (Ds_cat - Ds_an)/(zs_cat * Ds_cat - zs_an * Ds_an)
    
         #Using the solution-diffusion-film model, transport; HPO4_2, H2PO4, H3PO4,  HCO3, CO2
@@ -553,13 +559,9 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
         HCO3_m=HCO3_p+(HCO3_bt[i]-HCO3_p)*exp(Jw[i]/k[i]) 
         H2PO4_m = H2PO4_p + (H2PO4_bt[i] - H2PO4_p)*exp(Jw[i]/k[i])
         """NH4_m using RO Case for trace ion CP;Analytical solution for trace ion CP"""
-        #Ds_cat = 1.334e-9 #Diffusion Coeff. Na
-        #Ds_an = 2.031e-9  #Diffusion Coeff. Cl
-        #Ds = ((zs_cat - zs_an)* (Ds_cat*Ds_an))/(zs_cat*Ds_cat - zs_an*Ds_an) #Diffusion coefficient of the dominant salt
-        #delta = Ds/k[i]        #Boundary layer thickness
-        #Dt = 1.98e-9           #Diffusion coef. of NH4+ 
-        #theta_delta = (Ds_cat - Ds_an)/(zs_cat * Ds_cat - zs_an * Ds_an)
-        NH4_m = NH4_b[i] * exp((Jw[i]*delta)/Dt)*exp((Jw[i]*theta_delta)/k[i])
+        NH4_m = NH4_b[i] * exp((Jw[i]*delta)/Dt_NH4)*exp((Jw[i]*theta_delta)/k[i])      
+        """NO3- CP using RO Case for trace ion CP; Analytical solution for trace ion CP"""
+        NO3_tm = NO3_b1 * exp((Jw[i]*delta)/Dt_NO3)*exp((Jw[i]*theta_delta)/k[i])
         OH_m = OH_p+(OH_bt-OH_p)*exp(Jw[i]/(3.34*k[i]))   ## ?????
         H_m = H_p+(H_bt-H_p)*exp(Jw[i]/(5.62*k[i])) 
 
@@ -567,7 +569,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
         Ctm = CO3_m + HCO3_m + CO2_m 
         Ptm = PO4_3_m + HPO4_2_m+ H2PO4_m + H3PO4_m
         Ntm = NH4_m + NH3_m 
-        #print(NH4_m, NH3_m)
+        #print(NO3_bt, NO3_m)
         """Alkalinity mass balance in the film layer""" 
         Alkm= HCO3_m + (2*CO3_m) - H3PO4_m +  HPO4_2_m + (2 * PO4_3_m) + NH3_m +  OH_m - H_m   
         #print(Alkm)
@@ -583,6 +585,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             K           %e 
             Ca          %e
             Fe          %e
+            N(5)        %e
             C(4)        %e
             P           %e
             N(-3)       %e
@@ -596,7 +599,8 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             -ph       true
             -molalities    HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  MgOH+  HSO4-  MgCO3  NH4SO4-  MgPO4-  CaHCO3+  NaHCO3  CaCO3  MgHCO3+  NaCO3-  FeHCO3+
                 CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4  
-            END"""%(t,7,CF[i]*Cl,CF[i]*SO4,CF[i]*Na,CF[i]*Mg,CF[i]*K,CF[i]*Ca,CF[i]*Fe,Ctm,Ptm,Ntm,Alkm,Pbar[i])
+                NO3- CaNO3+
+            END"""%(t,7,CF[i]*Cl,CF[i]*SO4,CF[i]*Na,CF[i]*Mg,CF[i]*K,CF[i]*Ca,CF[i]*Fe,NO3_tm,Ctm,Ptm,Ntm,Alkm,Pbar[i])
             
             
         sol_film_minteq = phreecalc1(film_speciation)
@@ -613,6 +617,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
         CaH2PO4_m = sol_film_minteq[2][29]; FeH2PO4_m = sol_film_minteq[2][30]; FeH2PO42_m = sol_film_minteq[2][31];  MgH2PO4_m = sol_film_minteq[2][32]
         CaNH3_2m = sol_film_minteq[2][33]; CaNH322_m = sol_film_minteq[2][34]
         CaOH_m = sol_film_minteq[2][35];  FeOH_m = sol_film_minteq[2][36]; Fe_OH_2m = sol_film_minteq[2][37]; Fe_OH_3_m = sol_film_minteq[2][38];  Fe_OH_4_m = sol_film_minteq[2][39];  FeOH_2m = sol_film_minteq[2][40];  Fe2_OH_2_4m = sol_film_minteq[2][41] 
+        NO3_m = sol_bulk_minteq[1][42]; CaNO3_m = sol_bulk_minteq[1][43]
             
         """ Summing Ion-pairs"""
         "Summing Ion-pairs"
@@ -625,7 +630,8 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
         PO4_3_m = Ptm - HPO4_2_mt - H2PO4_mt - H3PO4_m
         NH3_mt = NH3_m + CaNH3_2m + CaNH322_m
         NH4_m = Ntm - NH3_mt
-        #print(NH4_m, NH3_mt)
+        NO3_m1 = NO3_m + CaNO3_m
+        #print(NO3_tm, NO3_m1)
 
         """Permeate concentrations of Ammonium, carbonate and phosphate species"""
         HCO3_p= (Ps*HCO3_mt)/(Jw[i]+Ps)
@@ -638,12 +644,14 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
         # H2CO3_p = H2CO3_m
         # H3PO4_p = H3PO4_m
         # NH3_p = NH3_m
-
+        
         """Permeation of alkalinity due to NH4 diffusion electromigration"""
         num1 = NH4_m * Pnh4[i]
         NH4_p[i] = num1/(denum1+denum2)
         #print(NH4_p, NH3_p)
-        
+        """NO3 permeation diffusion electromigration"""
+        num2 = NO3_tm * Pno3[i]
+        NO3_tp[i] = num2/(denum3 + denum2)
         """Weak-acid species mass balance in the permeate"""
 
         Ctp[i] = HCO3_p + H2CO3_p     
@@ -659,6 +667,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             pH            %f
             Na            %e 
             Cl            %e
+            N(5)          %e
             C(4)          %e
             P             %e
             N(-3)         %e
@@ -667,8 +676,9 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             SELECTED_OUTPUT
             -reset    false
             -ph       true
-            -molalities      HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  NaHCO3  NaCO3-  NaHPO4-                   
-             END"""%(t,7,Cp[i]/2,Cp[i]/2,Ctp[i],Ptp[i],Ntp[i],Alkp[i])
+            -molalities      HCO3-  H2CO3  CO3-2  PO4-3  HPO4-2  H2PO4-  H3PO4  NH4+  NH3  OH-  H+  NaHCO3  NaCO3-  NaHPO4-
+                NO3- CaNO3+                   
+             END"""%(t,7,Cp[i]/2,Cp[i]/2,NO3_tp[i],Ctp[i],Ptp[i],Ntp[i],Alkp[i])
         
         sol_permeate_minteq = phreecalc1(permeate_speciation)
         #print(sol_permeate_minteq)
@@ -676,14 +686,16 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
         HCO3_p=sol_permeate_minteq[1][1]; H2CO3_p=sol_permeate_minteq[1][2]; CO3_p = sol_permeate_minteq[1][3];  OH_p=sol_permeate_minteq[1][4]; H_p=sol_permeate_minteq[1][5]; 
         PO4_3_p =sol_permeate_minteq[1][6]; HPO4_2_p = sol_permeate_minteq[1][7];  H2PO4_p = sol_permeate_minteq[1][8]; H3PO4_p =sol_permeate_minteq[1][9]
         NH4_p1 = sol_permeate_minteq[1][10]; NH3_p1 = sol_permeate_minteq[1][11]; NaHCO3_p = sol_permeate_minteq[1][12]; NaCO3_p = sol_permeate_minteq[1][13]; NaHPO4_p = sol_permeate_minteq[1][14]
+        NO3_p1 = sol_bulk_minteq[1][42]; CaNO3_p1 = sol_bulk_minteq[1][43]
 
         """Summing Ion-pairs"""
         HCO3_p = sol_permeate_minteq[1][1] + NaHCO3_p
-        
+        NO3_p = NO3_p1 + CaNO3_p1
     
         
         """Phosphate, Carbonate, Ammonium and alkalinity mass balance"""
         if r[i]< recovery/100:       #checks if the current recovery rate r[i]
+            NO3_tb[i+1] = (NO3_tb[i]*(1-r[i]) - dr*NO3_tp[i])/(1-r[i+1])
             Ctb[i+1] = (Ctb[i]*(1-r[i]) - dr*Ctp[i])/(1-r[i+1])
             Ptb[i+1] = (Ptb[i]*(1-r[i]) - dr*Ptp[i])/(1-r[i+1])
             Ntb[i+1] = (Ntb[i]*(1-r[i]) - dr*Ntp[i])/(1-r[i+1])
