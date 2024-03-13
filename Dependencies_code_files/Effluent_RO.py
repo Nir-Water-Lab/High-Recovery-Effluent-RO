@@ -95,10 +95,11 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     Ntp_Accum =np.zeros(len(r))
 
     pressure_drop = np.zeros(len(r));   Fd = np.zeros(len(r)); U = np.zeros(len(r))
-    Re_c = np.zeros(len(r));    Sh = np.zeros(len(r)); pH_b = np.zeros(len(r))    
+    Re_c = np.zeros(len(r));    Sh = np.zeros(len(r)); pH_b = np.zeros(len(r))     
     pH_m = np.zeros(len(r));    pH_p=np.zeros(len(r));  Theta=np.zeros(len(r))     
     w_H_eff=np.zeros(len(r));   w_OH_eff=np.zeros(len(r))
     
+    #print(pH_b)
 
     # Carbonate Species
     HCO3_b=np.zeros(len(r));    CO3_b=np.zeros(len(r)); H2CO3_b = np.zeros(len(r)) ; CO2_b = np.zeros(len(r))
@@ -211,7 +212,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     
 
     
-    
+    pH_b[:] = feed_pH
     # assign Pw and Ps values based on the stage
     for i in range(len(r)):
         """Water Flux and salt passage model""" 
@@ -336,7 +337,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [1.01, 1.5, 5.2 ] 0.85, 3.6
-        pressure_boost = [0.799, 1.3, 5.0]
+        pressure_boost = [0.8, 1.5, 4.0]    #4.8, 4.0 Alt
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -410,7 +411,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     #print(first_stage_Avg_flux,second_stage_Avg_flux,third_stage_Avg_flux,fourth_stage_Avg_flux)
 
     for i in range(len(r) - 1):
-
+        
         bulk_speciation = """
             SOLUTION 1 effluent
             units     mol/kgw
@@ -426,7 +427,6 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             C(4)        %e
             P           %e
             N(-3)       %e
-            Alkalinity  %e
             USE solution 1
             REACTION_PRESSURE 1
             %f
@@ -441,11 +441,11 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                 CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4
             -saturation_indices  Ca3(PO4)2(beta)   Calcite
             -equilibrium_phases  Ca3(PO4)2(beta)   Calcite     
-            END"""%(t,feed_pH,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
+            END"""%(t,pH_b[i],Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Pbar[i])
         
         
         sol_bulk_minteq = phreecalc1(bulk_speciation)
-        print(sol_bulk_minteq)
+        #print(sol_bulk_minteq)
         
         pH_b[i]=sol_bulk_minteq[1][0];  
         HCO3_b[i]=sol_bulk_minteq[1][1];  CO2_b[i]=sol_bulk_minteq[1][2] ; #CO3_b[i] = sol_bulk_minteq[2][3]

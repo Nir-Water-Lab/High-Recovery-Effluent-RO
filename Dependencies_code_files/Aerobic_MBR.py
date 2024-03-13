@@ -1,4 +1,4 @@
-def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Alk_feed,first_stage, second_stage, third_stage, fourth_stage):
+def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P_std,NaCl_std,A,Qw,Rej_NaCl,d_mil,Pw1,Ps1,Pw2,Ps2,Pw3,Ps3,Pw4,Ps4,Pco2,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,C,GR,alpha,gamma,sigma,L,feed_pH,Nt_feed,Ct_feed,first_stage, second_stage, third_stage, fourth_stage):
      
     # Import standard library modules first.
     #import sys
@@ -79,7 +79,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
     S = np.zeros(len(r));   Cb = np.zeros(len(r))
     osmotic_pressure = np.zeros(len(r))
     S0 = (Cl * 35.453 + Na * 22.98977 + Mg * 24.305 + Ca * 40.078 + K * 39.098 + SO4 * 32.065 + Fe * 55.845 + P * 30.974)
-    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Fe + P + NO3 + Nt_feed/14011)
+    Cb[0] = (Cl + Na + Mg + Ca + K + SO4 + Fe + P +  NO3 +Ct_feed + Nt_feed/14011)
     
     
     Cp = np.zeros(len(r));  Cm = np.zeros(len(r))
@@ -116,7 +116,9 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
     #Nitrate Species
     NO3_tb = np.zeros(len(r))
     NO3_tp = np.zeros(len(r))
-    
+    NO3_tp_Accum = np.zeros(len(r))
+    NH4_accum = np.zeros(len(r))
+
     Pnh4 = np.zeros(len(r))  #Pnh4 Ammonium ion permeability
     Pno3 = np.zeros(len(r)) #Pno3 Nitrate permeability
     theta_m = np.zeros(len(r))
@@ -186,7 +188,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             P        %e
             N(5)     %e
             N(-3)        %f mg/l
-            Alkalinity  %f mg/l
+            C(4)     %e
             USE solution 1
             USER_PUNCH
             -headings ALK Ct Pt Nt NO3 RHO  
@@ -194,14 +196,14 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             10 PUNCH ALK
             20 PUNCH TOT("C")
             30 PUNCH TOT("P")
-            40 PUNCH TOT("N")
+            40 PUNCH TOT("N(-3)")
             50 PUNCH TOT("N(5)")
             60 PUNCH RHO
              -end
             SELECTED_OUTPUT
             -reset          false
             -user_punch     true
-            END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Fe,P,NO3,Nt_feed,Alk_feed)
+            END"""%(t,feed_pH,Cl,Na,Mg,K,Ca,SO4,Fe,P,NO3,Nt_feed,Ct_feed)
     #sol_feed = phreecalc(Feed)
      
     sol_feed_minteq = phreecalc1(Feed)
@@ -342,7 +344,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [1.01, 1.5, 5.2 ] 0.85, 3.6
-        pressure_boost = [0.799, 1.3, 5.0]
+        pressure_boost = [0.72, 1.8, 4.5]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -430,9 +432,9 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             Ca          %e 
             Fe          %e
             N(5)        %e
-            N(-3)       %e
             C(4)        %e
             P           %e
+            N(-3)       %e
             Alkalinity  %e
             USE solution 1
             REACTION_PRESSURE 1
@@ -453,9 +455,9 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
         
         
         sol_bulk_minteq = phreecalc1(bulk_speciation)
-        #print(sol_bulk_minteq)
+        print(sol_bulk_minteq)
         
-        pH_b[i]=sol_bulk_minteq[1][0];  
+        pH_b[i]=sol_bulk_minteq[100][0];  
         HCO3_b[i]=sol_bulk_minteq[1][1];  CO2_b[i]=sol_bulk_minteq[1][2] ; #CO3_b[i] = sol_bulk_minteq[2][3]
         HPO4_2_b[i] = sol_bulk_minteq[1][5];  H2PO4_b[i] = sol_bulk_minteq[1][6]; H3PO4_b[i] =sol_bulk_minteq[1][7]
         #print(pH_b)
@@ -703,13 +705,18 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
 
         #print(NH4_p,Pnh4)
 
-    for j in range(len(r)):
-        Ntp_Accum[j] = np.average(Ntp[0:j+1])
+    for accumulate in range(len(r)):
+        Ntp_Accum[accumulate] = np.average(Ntp[0:accumulate+1])
+        NO3_tp_Accum[accumulate] = np.average(NO3_tp[0:accumulate+1])
+        NH4_accum[accumulate] = np.average(NH4_p[0:accumulate+1])
     Ntp_Accum_mgl = 14011*Ntp_Accum
-                 
+    NO3_tp_Accum_mgl = 62000*NO3_tp_Accum
+    NH4_accum_mgl = 18000*NH4_accum
+
+                
     
 
-    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite,  SI_Calcite,Pnh4, osmotic_pressure, NH3_p, NH4_p
+    return r,Jw,Cb,Cp,Cm,Pbar,first_stage_Avg_flux, second_stage_Avg_flux, third_stage_Avg_flux, fourth_stage_Avg_flux, pH_b,pH_p,pH_m,Alkb,Alkm,Alkp,Ctb,Ctp,Ptb,Ptp,Ntb,Ntp,Ntp_Accum_mgl, SI_Armp_CaPhosphate,d_CaPhosphate,d_Calcite,  SI_Calcite,Pnh4, osmotic_pressure, NH3_p, NH4_p,NO3_tb,NO3_tp,NO3_tp_Accum_mgl,NH4_accum_mgl
 
     
 
