@@ -187,7 +187,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             Fe       %e
             P        %e
             N(5)     %e
-            N(-3)        %f mg/l
+            N(-3)        %e
             C(4)     %e
             USE solution 1
             USER_PUNCH
@@ -344,7 +344,7 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [1.01, 1.5, 5.2 ] 0.85, 3.6
-        pressure_boost = [0.72, 1.8, 4.5]
+        pressure_boost = [0.5, 1.6, 3.7] #[0.7, 1.7, 4.1]
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -455,9 +455,9 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
         
         
         sol_bulk_minteq = phreecalc1(bulk_speciation)
-        print(sol_bulk_minteq)
+        #print(sol_bulk_minteq)
         
-        pH_b[i]=sol_bulk_minteq[100][0];  
+        pH_b[i]=sol_bulk_minteq[1][0];  
         HCO3_b[i]=sol_bulk_minteq[1][1];  CO2_b[i]=sol_bulk_minteq[1][2] ; #CO3_b[i] = sol_bulk_minteq[2][3]
         HPO4_2_b[i] = sol_bulk_minteq[1][5];  H2PO4_b[i] = sol_bulk_minteq[1][6]; H3PO4_b[i] =sol_bulk_minteq[1][7]
         #print(pH_b)
@@ -491,22 +491,14 @@ def Aerobic_Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe,NO3, P_feed,t,recovery,kt, ks,P
 
         
         """Using a Linear Function to find NH4+ and NO3 permeability  & Theta_M over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
-        if i <= second_stage and pH_b[i] <= 7:
+        if pH_b[i] <= 7:
             Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.6e-8)   # XLE
             Pno3[i] = 9.83e-7 + (pH_b[i] - 4.5)*(1.27e-7)  #XLE
             theta_m[i] = -0.189 + (pH_b[i] - 4.5)*(0.1872)     #XLE
-        elif i > second_stage and pH_b[i] <= 7:
-            Pnh4[i] = 6.63e-7 + (pH_b[i] - 4.5)*(8.72e-8)     #BW30LE
-            Pno3[i] = 1.09e-6 + (pH_b[i] - 4.5)*(-2.42e-7)    #BW30LE
-            theta_m[i] = -0.36 + (pH_b[i]- 4.5)*0.1784        #BW30LE
-        elif i <= second_stage and pH_b[i] > 7:
+        elif pH_b[i] > 7:
             Pnh4[i] = 1.2e-6     #XLE
             Pno3[i] = 1.3e-6 + (pH_b[i] - 7)*-2.5e-7  #XLE
             theta_m[i] = 0.279 + (pH_b[i] -7) *0.06333 #XLE
-        elif i > second_stage and pH_b[i] > 7:
-            Pnh4[i] = 8.81e-7                   #BW30LE
-            Pno3[i] = 4.85e-7 + (pH_b[i] -7)*8.0e-9 #BW30LE
-            theta_m[i] = 0.086 + (pH_b[i]- 7)*(-0.016)   #BW30LE
             
         
         #print(theta_m)

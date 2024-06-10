@@ -12,21 +12,23 @@ start_time = time.time()
 mw_Na = 22989.77; mw_Mg = 24305; mw_Ca = 40078 ; mw_Cl = 35453
 mw_P = 30974; mw_Si = 28086; mw_K = 39098; mw_SO4 = 96062.6; mw_Fe = 55845
 
-Ca = 43/mw_Ca;	Cl = 334/mw_Cl; K = 12/mw_K;	P = 10/mw_P
-Mg = 9/mw_Mg; Na = 303/mw_Na;	Fe = 0.0/mw_Fe                      #P_Unrecovered
-SO4 = 10/mw_SO4; 
+# Ca = 43/mw_Ca;	Cl = 334/mw_Cl; K = 12/mw_K;	P = 27/mw_P
+# Mg = 9/mw_Mg; Na = 303/mw_Na;	Fe = 0.0/mw_Fe                      #P_Unrecovered
+# SO4 = 10/mw_SO4; 
 # 
 # Ca = 22/mw_Ca;	Cl = 162/mw_Cl; K = 12/mw_K;	P = 0.1/mw_P
 # Mg = 5/mw_Mg; Na = 250/mw_Na;	Fe = 0.0/mw_Fe                      #P_recovered
-# SO4 = 9.8/mw_SO4; 
-# 
+# SO4 = 9.8/mw_SO4
+
 # Ca = 38.41/mw_Ca;	Cl = 123.13/mw_Cl; K = 22.51/mw_K;	P = 9.88/mw_P
 # Mg = 7.7/mw_Mg; Na = 131.33/mw_Na;	Fe = 0.0/mw_Fe                      #NH3 unrecovered
 # SO4 = 6.99/mw_SO4
 
-# Ca = 24.24/mw_Ca;	Cl = 116.4/mw_Cl; K = 5.82/mw_K;	P = 6.76/mw_P
-# Mg = 5.68/mw_Mg; Na = 386.48/mw_Na;	Fe = 0.0/mw_Fe                         #NH3 recovered  
-# SO4 = 4.8/mw_SO4
+Ca = 24.24/mw_Ca;	Cl = 116.4/mw_Cl; K = 5.82/mw_K;	P = 6.76/mw_P
+Mg = 5.68/mw_Mg; Na = 386.48/mw_Na;	Fe = 0.0/mw_Fe                         #NH3 recovered  
+SO4 = 4.8/mw_SO4
+
+
 """Enter acid-base parameters"""
 """
 ---------------------------------
@@ -35,8 +37,8 @@ Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
 feed_pH = 6.2 # Enter pH 
-Ct_feed = 0.00875    # 0.008167   #0.0153  #Enter total inorganic carbon (mol/l)
-Nt_feed = 35.6  #2.0 #mg/l 151.6
+Ct_feed = 0.008167    # 0.00875  #0.0153  #Enter total inorganic carbon (mol/l)
+Nt_feed = 2.0  # 35.6 #mg/l 151.6
 Alk_feed = 0.0 #eq/L ignored
 
 """Enter process operational conditions"""
@@ -48,7 +50,7 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 6.8 #Enter Pressure (bars) 
+P_feed = 6.6 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 #u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 95.0 #Enter Recovey Ratio (%)

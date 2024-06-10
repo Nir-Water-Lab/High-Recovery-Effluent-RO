@@ -14,13 +14,17 @@ mw_P = 30974; mw_Si = 28086; mw_K = 39098; mw_SO4 = 96062.6; mw_Fe = 55845; mw_N
 mw_NO3 = 62000
 
 
-# Ca = 54/mw_Ca;	Cl = 232/mw_Cl; K = 17.3/mw_K;	P = 1.4/mw_P
-# Mg = 14/mw_Mg; Na = 140/mw_Na;	Fe = 0.0/mw_Fe                      #Aerobic data
-# SO4 = 99/mw_SO4; NO3 = 3/mw_N 
+Ca = 54/mw_Ca;	Cl = 232/mw_Cl; K = 17.3/mw_K;	P = 1.4/mw_P
+Mg = 14/mw_Mg; Na = 140/mw_Na;	Fe = 0.0/mw_Fe                      #Aerobic data
+SO4 = 99/mw_SO4; NO3 = 3/mw_NO3 
 
-Ca = 52/mw_Ca;	Cl = 325/mw_Cl; K = 15/mw_K;	P = 10.0/mw_P           #P added
-Mg = 13/mw_Mg; Na = 175/mw_Na;	Fe = 0.0/mw_Fe                      #WAVE Library data
-SO4 = 72.2/mw_SO4; NO3 = 50/mw_NO3 
+# Ca = 50.20/mw_Ca;	Cl = 336.5/mw_Cl; K = 15.0/mw_K;	P = 0.0/mw_P           #P added
+# Mg = 13.0/mw_Mg; Na = 169.6/mw_Na;	Fe = 0.0/mw_Fe                      #WAVE Library data
+# SO4 = 74.79/mw_SO4; NO3 = 51.8/mw_NO3 
+
+# Ca = 0/mw_Ca; Cl = 182.13/mw_Cl; K = 10/mw_K;	P = 9.88/mw_P
+# Mg = 10/mw_Mg; Na = 118.33/mw_Na;	Fe = 0.0/mw_Fe                      #Expt plan
+# SO4 = 10/mw_SO4; NO3 = 10/mw_NO3 
 
 """Enter acid-base parameters"""
 """
@@ -29,9 +33,9 @@ feed_pH : pH, feed (float)
 Bt_feed : total boron (float)
 Alk_feed : Feed alkalinity (float)
 """ 
-feed_pH = 6.7 # Enter pH 
-Ct_feed = 0.015473 #0.0109193  #Enter total inorganic carbon (mol/l)
-Nt_feed = 44 #10.7 mg/l
+feed_pH = 8.3 # Enter pH 
+Ct_feed = 0.0109333  #Enter total inorganic carbon (mol/l)
+Nt_feed = 0.0007143 #0.002151  #43.27 #10.7 mg/l
 #Alk_feed =  #eq/L ignored
 
 """Enter process operational conditions"""
@@ -43,7 +47,7 @@ u0 : cross-flow velocity (float)
 recovery : recovery (float)
 pressure_drop : total pressure drop (float)
 """
-P_feed = 6.8 #Enter Pressure (bars) 
+P_feed = 6.6 #Enter Pressure (bars) 
 t = 25.0 #Enter Temperature (celcius) 
 #u0 = 0.17 #Enter feed cross-flow velocity (m/s)
 recovery = 95.0 #Enter Recovey Ratio (%)
@@ -161,7 +165,7 @@ r = np.linspace(0, int(recovery), int(recovery + 1))
 
 # write data to worksheet
 headers = ['Recovery', 'Jw(m/s)', 'Cb(M)', 'Cp(M)', 'Cm(M)', 'P(Bar)','first_stage_Avg_flux(LMH)', 'second_stage_Avg_flux(LMH)', 'third_stage_Avg_flux(LMH)', 'fourth_stage_Avg_flux(LMH)',
-           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Brine','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate','d_CaPhosphate','d_Calcite',  'SI_Calcite','Pnh4','osmotic_pressure','NH3_p', 'NH4_p','NO3_tb','NO3_tp','NO3_Acumm_mg/L','NH4_accum_mgl']
+           'Brine pH','Permeate pH','Film layer pH','Brine Alkalinity','Permeate Alkalinity','Trace Conc. of C in Retentate','Trace Conc. of C in Permeate','Ptb','Ptp','Ntb','Ntp','Ntp_Accum_mgl','SI_Armp_CaPhosphate','d_CaPhosphate','d_Calcite',  'SI_Calcite','Pnh4','osmotic_pressure','NH3_p', 'NH4_p','NO3_tb','NO3_tp','NO3_Acumm_mg/L','NH4_accum_mgl']
 #, , 
 
 for i, header in enumerate(headers):

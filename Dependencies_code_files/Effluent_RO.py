@@ -212,7 +212,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
     
 
     
-    pH_b[:] = feed_pH
+    #pH_b[:] = feed_pH
     # assign Pw and Ps values based on the stage
     for i in range(len(r)):
         """Water Flux and salt passage model""" 
@@ -337,7 +337,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             Mcp[i] = C * (Re_c[i] ** alpha) * (Sc ** gamma) * (GR ** sigma) + 1 
                        
             #Calculating pressure per stage [1.01, 1.5, 5.2 ] 0.85, 3.6
-        pressure_boost = [0.8, 1.5, 4.0]    #4.8, 4.0 Alt
+        pressure_boost = [0.7, 1.4, 4.2]    #4.8, 4.0 Alt
         if i <= first_stage:
             Pbar[i] = P_feed - pressure_drop[i] * (r[i]/r[len(r)-1])
         elif first_stage < i <= second_stage:
@@ -427,6 +427,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
             C(4)        %e
             P           %e
             N(-3)       %e
+            Alkalinity  %e
             USE solution 1
             REACTION_PRESSURE 1
             %f
@@ -441,7 +442,7 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
                 CaHPO4 FeHPO4  KHPO4-  MgHPO4  NaHPO4-  FeHPO4+ CaH2PO4+  FeH2PO4+  FeH2PO4+2  MgH2PO4+  CaNH3+2  Ca(NH3)2+2  CaOH+  FeOH+  Fe(OH)2  Fe(OH)3-  Fe(OH)4-  FeOH+2  Fe2(OH)2+4
             -saturation_indices  Ca3(PO4)2(beta)   Calcite
             -equilibrium_phases  Ca3(PO4)2(beta)   Calcite     
-            END"""%(t,pH_b[i],Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Pbar[i])
+            END"""%(t,feed_pH,Cl*CFb[i],SO4/(1-r[i]),Na*CFb[i],Mg/(1-r[i]),K*CFb[i],Ca/(1-r[i]),Fe/(1-r[i]),Ctb[i],Ptb[i],Ntb[i],Alkb[i],Pbar[i])
         
         
         sol_bulk_minteq = phreecalc1(bulk_speciation)
@@ -477,22 +478,29 @@ def Effluent(Ca, K, Mg, Na, Cl,SO4,P, Fe, P_feed,t,recovery,kt, ks,P_std,NaCl_st
         NH3_bt[i] = NH3_b[i] + CaNH3_2b + CaNH322_b
         NH4_b[i] = Ntb[i] - NH3_bt[i]
 
-        """Using a Linear Function to find NH4+ permeability over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
-        if i <= second_stage and pH_b[i] <= 7:
+        # """Using a Linear Function to find NH4+ permeability over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained"""
+        # if i <= second_stage and pH_b[i] <= 7:
+            # Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.6e-8)   # XLE
+            # theta_m[i] = -0.189 + (pH_b[i] - 4.5)*(0.1872)     #XLE
+        # elif i > second_stage and pH_b[i] <= 7:
+            # Pnh4[i] = 6.63e-7 + (pH_b[i] - 4.5)*(8.72e-8)     #BW30LE
+            # theta_m[i] = -0.36 + (pH_b[i]- 4.5)*0.1784        #BW30LE
+        # elif i <= second_stage and pH_b[i] > 7:
+            # Pnh4[i] = 1.2e-6     #XLE
+            # theta_m[i] = 0.279 + (pH_b[i] -7) *0.06333 #XLE
+        # elif i > second_stage and pH_b[i] > 7:
+            # Pnh4[i] = 8.81e-7                   #BW30LE
+            # theta_m[i] = 0.086 + (pH_b[i]- 7)*(-0.016)   #BW30LE
+            
+        """Using a Linear Function to find NH4+ & Theta_M over the pH range of 4.5, 7 (interpolating), > 8.5 permeability maintained for XLE membrane"""
+        if pH_b[i] <= 7:
             Pnh4[i] = 1.34e-6 + (pH_b[i] - 4.5)*(-5.6e-8)   # XLE
             theta_m[i] = -0.189 + (pH_b[i] - 4.5)*(0.1872)     #XLE
-        elif i > second_stage and pH_b[i] <= 7:
-            Pnh4[i] = 6.63e-7 + (pH_b[i] - 4.5)*(8.72e-8)     #BW30LE
-            theta_m[i] = -0.36 + (pH_b[i]- 4.5)*0.1784        #BW30LE
-        elif i <= second_stage and pH_b[i] > 7:
+        elif pH_b[i] > 7:
             Pnh4[i] = 1.2e-6     #XLE
             theta_m[i] = 0.279 + (pH_b[i] -7) *0.06333 #XLE
-        elif i > second_stage and pH_b[i] > 7:
-            Pnh4[i] = 8.81e-7                   #BW30LE
-            theta_m[i] = 0.086 + (pH_b[i]- 7)*(-0.016)   #BW30LE
-            
-        
-        #print(theta_m)
+            #print(theta_m)
+
         """Resolving Cpt using SDEF theory"""
         omega_cat = 0.549e-6 #Na
         Omega_an = 0.310e-6 #Cl
